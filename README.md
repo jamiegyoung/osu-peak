@@ -10,7 +10,34 @@ You can put this on your userpage or have it as a signature.
 ![](https://i.imgur.com/XeOmXVS.png)
 
 ##  Usage
-A link will be provided soon for the usage of this, for the meantime you can host it yourself and use it on your own domain
+Insert your osu user id into this link <https://osu.jamieyoung.tech/u/[userid]> and add it to your user page.
+
+Optional parameters are
+|Param|required|Description      |Options           |
+|-----|--------|-----------------|------------------|
+|theme|❌|changes the theme|light / other|
+|mode |❌|changes the mode |refer to the mode chart below|
+
+
+###  Mode chart
+|Mode|Options|
+|---|---|
+|standard|0, standard, std, osu|
+|taiko|1, taiko|
+|ctb|2, ctb, catch|
+|mania|3, mania|
+
+## Example Osu Userpage
+Dark theme standard:
+```bbcode
+[img]https://osu.jamieyoung.tech/u/2836231[/img]
+```
+
+Light theme taiko:
+```bbcode
+[img]https://osu.jamieyoung.tech/u/2836231?mode=taiko&theme=light[/img]
+```
+
 
 ## Setup
 If you wish to set this up yourself, make sure you have [node](https://nodejs.org/en/), [npm](https://www.npmjs.com/) and [sqlite3](https://sqlite.org/download.html) installed, then clone the repository.

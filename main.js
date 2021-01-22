@@ -189,7 +189,7 @@ app.get("/u/:userId", async (req, res) => {
       return 1;
     }
 
-    if (mode === "2" || mode === "ctb") {
+    if (mode === "2" || mode === "ctb" || mode === "catch") {
       return 2;
     }
 
