@@ -51,7 +51,7 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
 }
 
 const generateImageFromDB = async (id, mode, theme) => {
-  const backgroundColor = theme === "light" ? "#dedbdb" : "#242121";
+  const backgroundColor = theme === "light" ? "#dedbdb" : "#2A2226";
   const textColor = theme === "light" ? "#000000" : "#ffffff";
 
   const gameDetails = await db.getUserDetails(id, mode);
@@ -62,7 +62,7 @@ const generateImageFromDB = async (id, mode, theme) => {
 
   const canvas = createCanvas(400, 100);
   const ctx = canvas.getContext("2d");
-  registerFont("./Torus.otf", { family: "Torus" });
+  registerFont("./media/Torus.otf", { family: "Torus" });
 
   // Generate background
   ctx.fillStyle = backgroundColor;
@@ -72,7 +72,9 @@ const generateImageFromDB = async (id, mode, theme) => {
   ctx.clip();
 
   // Get image
-  const bg = await loadImage(theme === "light" ? "./media/bg-light.png" : "./media/bg.png");
+  const bg = await loadImage(
+    theme === "light" ? "./media/bg-light.png" : "./media/bg.png"
+  );
   ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
   const getSrc = () => {
@@ -118,11 +120,12 @@ const generateImageFromDB = async (id, mode, theme) => {
   return Buffer.from(base64Data, "base64");
 };
 
-const getUserInfo = async (userId, mode) => await osuApi
+const getUserInfo = async (userId, mode) =>
+  await osuApi
     .getUser({ u: escapeStringRegexp(userId), m: mode })
     .catch((e) => {
       console.log("Error: " + e);
-      return false
+      return false;
     });
 
 app.get("/u/:userId", async (req, res) => {
@@ -158,7 +161,7 @@ app.get("/u/:userId", async (req, res) => {
   const userId = req.params.userId;
 
   const lastUpdated = await db.getLastUpdated(userId);
-  const fiveMin = 5  * 1000;
+  const fiveMin = 5 * 60 * 1000;
   const dateNow = new Date();
 
   if (dateNow - new Date(lastUpdated) < fiveMin) {
