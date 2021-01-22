@@ -195,7 +195,7 @@ app.get("/u/:userId", async (req, res) => {
 
   if (prevDetails) {
     let finalChanges = {};
-    if (currentRank > prevDetails.peakRank) {
+    if (currentRank < prevDetails.peakRank) {
       finalChanges.rank = currentRank;
     }
 
