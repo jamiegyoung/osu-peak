@@ -1,13 +1,11 @@
 # Osu Peak
 > Generates an image of your osu peak rank and accuracy
 
-You can put this on your userpage or have it as a signature.
 
-![](https://i.imgur.com/NpDbTWD.png)
-
-![](https://i.imgur.com/iOKP2nz.png)
-
-![](https://i.imgur.com/XeOmXVS.png)
+![](https://osu.jamieyoung.tech/u/2836231)
+![](https://osu.jamieyoung.tech/u/7671790?mode=mania&theme=light)
+![](https://osu.jamieyoung.tech/u/7528639?mode=taiko)
+![](https://osu.jamieyoung.tech/u/6472042?mode=ctb&theme=light)
 
 ##  Usage
 Insert your osu user id into this link <https://osu.jamieyoung.tech/u/[userid]> and add it to your user page.

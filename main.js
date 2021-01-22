@@ -134,7 +134,7 @@ const generateImageFromDB = async (id, mode, theme) => {
   const drawName = () => {
     ctx.font = '400 31px "Torus"';
     if (userName.length > 12) {
-      ctx.font = '400 26px "Torus"';
+      ctx.font = '400 23px "Torus"';
     }
     ctx.fillText(userName, 110, 35);
   };
