@@ -30,10 +30,62 @@ const handleConfig = () => {
 const createUsersTable = (db) => {
   spinner.text = "Creating users table in database";
   db.run(
-    "CREATE TABLE IF NOT EXISTS users (id varchar(16), peak integer)",
+    `CREATE TABLE IF NOT EXISTS users (
+      id TEXT,
+      username TEXT,
+      profileImage TEXT,
+      lastUpdated INTEGER
+      )`,
     (_runRes, err) => {
-      spinner.warn("An error occured when creating the user table");
-      spinner.warn(err)
+      if (err) spinner.warn("An error occured when creating the user table");
+    }
+  );
+  
+  spinner.text = "Creating std table in database";
+  db.run(
+    `CREATE TABLE IF NOT EXISTS std (
+      id TEXT,
+      peakRank INTEGER,
+      peakAcc REAL
+      )`,
+    (_runRes, err) => {
+      if (err) spinner.warn("An error occured when creating the user table");
+    }
+  );
+
+  spinner.text = "Creating taiko table in database";
+  db.run(
+    `CREATE TABLE IF NOT EXISTS taiko (
+      id TEXT,
+      peakRank INTEGER,
+      peakAcc REAL
+      )`,
+    (_runRes, err) => {
+      if (err) spinner.warn("An error occured when creating the user table");
+    }
+  );
+
+  spinner.text = "Creating ctb table in database";
+  db.run(
+    `CREATE TABLE IF NOT EXISTS ctb (
+      id TEXT,
+      peakRank INTEGER,
+      peakAcc REAL
+      )`,
+    (_runRes, err) => {
+      if (err) spinner.warn("An error occured when creating the user table");
+    }
+  );
+
+  spinner.text = "Creating mania table in database";
+  db.run(
+    `CREATE TABLE IF NOT EXISTS mania (
+      id TEXT,
+      peakRank INTEGER,
+      peakAcc REAL
+      )`,
+    (_runRes, err) => {
+      if (err) spinner.warn("An error occured when creating the user table");
     }
   );
 };

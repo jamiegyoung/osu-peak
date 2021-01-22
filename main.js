@@ -1,10 +1,14 @@
 const express = require("express");
 const app = express();
 const osu = require("node-osu");
+const https = require("https");
 const escapeStringRegexp = require("escape-string-regexp");
-const { createCanvas, loadImage, registerFont } = require("canvas");
+const { createCanvas, loadImage, registerFont, Image } = require("canvas");
 const { apiKey } = require("./config.json");
 const db = require("./databaseHandler");
+const { profile } = require("console");
+
+const osuApi = new osu.Api(apiKey);
 
 // Thanks https://stackoverflow.com/a/3368118 !
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
@@ -46,9 +50,96 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
   }
 }
 
-app.get("/u/:user", async (req, res) => {
-  const osuApi = new osu.Api(apiKey);
-  const lightMode = req.query.theme === "light" ? true : false;
+const generateImageFromDB = async (id, mode, theme) => {
+  const backgroundColor = theme === "light" ? "#dedbdb" : "#242121";
+  const textColor = theme === "light" ? "#000000" : "#ffffff";
+
+  const gameDetails = await db.getUserDetails(id, mode);
+  const userDetails = await db.getUserDetails(id, undefined);
+  const peakAcc = gameDetails.peakAcc;
+  const peakRank = gameDetails.peakRank;
+  const userName = userDetails.username;
+
+  const canvas = createCanvas(400, 100);
+  const ctx = canvas.getContext("2d");
+  registerFont("./Torus.otf", { family: "Torus" });
+
+  // Generate background
+  ctx.fillStyle = backgroundColor;
+  roundRect(ctx, 0, 0, canvas.width, canvas.height, 10, true, false);
+
+  // Clip everything into the roundrect
+  ctx.clip();
+
+  // Get image
+  const bg = await loadImage(theme === "light" ? "./media/bg-light.png" : "./media/bg.png");
+  ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+
+  const getSrc = () => {
+    if (userDetails.profileImage) return userDetails.profileImage;
+    return "./media/avatar-guest.png";
+  };
+
+  ctx.strokeStyle = "#424242";
+  roundRect(ctx, 5, 5, 90, 90, 5, true, true);
+
+  const profileImage = new Image();
+  profileImage.onload = () => {
+    ctx.drawImage(profileImage, 10, 10, 80, 80);
+  };
+  profileImage.onerror = (err) => {
+    throw err;
+  };
+  profileImage.src = getSrc();
+
+  // Generate Name
+  ctx.fillStyle = textColor;
+  ctx.font = '400 31px "Torus"';
+  ctx.fillText(userName, 110, 35);
+
+  ctx.fillStyle = textColor;
+  ctx.font = '400 22px "Torus"';
+
+  const formattedRank = `#${(peakRank ? peakRank : -1)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+
+  if (peakAcc === null) {
+    peakAcc = "Bot";
+  }
+
+  ctx.fillText("Peak Rank: " + formattedRank, 110, 65);
+  ctx.fillText(`Peak Acc: ${peakAcc}`, 110, 90);
+
+  const base64Data = canvas
+    .toDataURL("image/png")
+    .replace(/^data:image\/png;base64,/, "");
+
+  return Buffer.from(base64Data, "base64");
+};
+
+const getUserInfo = async (userId, mode) => {
+  const user = await osuApi
+    .getUser({ u: escapeStringRegexp(userId), m: mode })
+    .catch(() => false);
+
+  if (!user) {
+    res.status(400).send("Invalid user");
+    return;
+  }
+
+  return user;
+};
+
+app.get("/u/:userId", async (req, res) => {
+  // const mode = ["std", "taiko", "ctb", "mania"];
+
+  // Test if the user id is a user id
+  if (!/^\d+$/.test(req.params.userId)) {
+    res.status(400).send("Invalid user id");
+    return;
+  }
+
   const getMode = () => {
     const mode = req.query.mode;
     if (mode === 0 || mode === "std" || mode === "standard" || mode === "osu") {
@@ -66,68 +157,65 @@ app.get("/u/:user", async (req, res) => {
     if (mode === "3" || mode === "mania") {
       return 3;
     }
+
+    return 0;
   };
 
-  const backgroundColor = lightMode ? "#dedbdb" : "#242121";
-  const textColor = lightMode ? "#000000" : "#ffffff";
-  // Better safe than sorry!
-  const user = await osuApi
-    .getUser({ u: escapeStringRegexp(req.params.user), m: getMode() })
-    .catch(() => false);
+  const userId = req.params.userId;
 
-  if (!user) {
-    res.status(400).send("Invalid user");
+  const lastUpdated = await db.getLastUpdated(userId);
+  const fiveMin = 5  * 1000;
+  const dateNow = new Date();
+
+  if (dateNow - new Date(lastUpdated) < fiveMin) {
+    const img = await generateImageFromDB(userId, getMode(), req.query.theme);
+    res.writeHead(200, {
+      "Content-Type": "image/png",
+      "Content-Length": img.length,
+    });
+
+    res.end(img);
     return;
   }
 
-  const safeUserID = user.id;
+  const user = await getUserInfo(userId, getMode());
 
-  const canvas = createCanvas(400, 100);
-  const ctx = canvas.getContext("2d");
-  registerFont("./Torus.otf", { family: "Torus" });
-
-  // Generate background
-  ctx.fillStyle = backgroundColor;
-  roundRect(ctx, 0, 0, canvas.width, canvas.height, 10, true, false);
-  ctx.clip();
-  const bg = await loadImage(
-    lightMode ? "./media/bg-light.png" : "./media/bg.png"
-  );
-  ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
-
-  // Generate Name
-  ctx.fillStyle = textColor;
-  ctx.font = '400 31px "Torus"';
-  ctx.fillText(user.name, 110, 35);
-
-  // Generate peak rank
-  const peakRank = await getPeakRank(user);
-
-  const formattedRank = `#${peakRank
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  const currentRank = user.pp.rank ? user.pp.rank : -1;
+  const prevDetails = await db.getUserDetails(user.id, getMode());
 
   if (user.accuracy === null) {
     user.accuracyFormatted = "Bot";
   }
 
-  ctx.fillStyle = textColor;
-  ctx.font = '400 22px "Torus"';
-  ctx.fillText("Peak Rank: " + formattedRank, 110, 65);
-  ctx.fillText(`Peak Acc: ${user.accuracyFormatted}`, 110, 90);
-
-  // Generate user picture
-  const imageRes = await generateUserPicture(safeUserID, ctx, backgroundColor);
-  if (!imageRes) {
-    res.status(400).send("Invalid user");
-    return;
+  if (!prevDetails) {
+    await db.setPeaks(user.id, getMode(), {
+      rank: currentRank,
+      acc: user.accuracyFormatted,
+    });
   }
 
-  const base64Data = canvas
-    .toDataURL("image/png")
-    .replace(/^data:image\/png;base64,/, "");
+  if (prevDetails) {
+    let finalChanges = {};
+    if (currentRank > prevDetails.peakRank) {
+      finalChanges.rank = currentRank;
+    }
 
-  const img = Buffer.from(base64Data, "base64");
+    if (user.accuracy > parseFloat(prevDetails.peakAcc.slice(0, -1))) {
+      finalChanges.acc = user.accuracyFormatted;
+    }
+
+    await db.setPeaks(user.id, getMode(), finalChanges);
+  }
+
+  await db.setUserDetails(
+    user.id,
+    user.name,
+    await loadProfileImageBuffer(user.id)
+  );
+
+  await db.setLastUpdatedNow(userId);
+
+  const img = await generateImageFromDB(userId, getMode(), req.query.theme);
 
   res.writeHead(200, {
     "Content-Type": "image/png",
@@ -135,42 +223,24 @@ app.get("/u/:user", async (req, res) => {
   });
 
   res.end(img);
+  return;
 });
 
 app.listen(3000);
 
-async function getPeakRank(user) {
-  
-  const currentRank = user.pp.rank ? user.pp.rank : -1;
-
-  const peakRank = await db.getPeakRank(user.id);
-
-  // Check if user exists
-  if (peakRank === undefined) {
-    db.setPeakRank(user.id, currentRank);
-    return currentRank;
-  };
-
-  // Update peak rank if current is less
-  if (currentRank < peakRank.peak) {
-    db.setPeakRank(user.id, currentRank);
-    return currentRank;
-  }
-
-  return peakRank.peak;
-}
-
-async function generateUserPicture(safeUserID, ctx, backgroundColor) {
-  const profileImg = await loadProfileImage();
-  ctx.strokeStyle = "#424242";
-  ctx.fillStyle = backgroundColor;
-  roundRect(ctx, 5, 5, 90, 90, 5, true, true);
-  ctx.drawImage(profileImg, 10, 10, 80, 80);
-  return true;
-
-  function loadProfileImage() {
-    return loadImage(`http://s.ppy.sh/a/${safeUserID}`).catch(() =>
-      loadImage("./media/avatar-guest.png")
-    );
-  }
-}
+const loadProfileImageBuffer = (id) =>
+  new Promise((resolve, reject) => {
+    https
+      .get(`https://a.ppy.sh/${id}`, (res) => {
+        res.setEncoding("base64");
+        let body = "data:" + res.headers["content-type"] + ";base64,";
+        res.on("data", (data) => (body += data));
+        res.on("end", async () => {
+          resolve(body);
+        });
+      })
+      .on("error", (e) => {
+        console.log("Got error when getting image: " + e.message);
+        reject(e.message);
+      });
+  });
