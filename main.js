@@ -120,7 +120,10 @@ const generateImageFromDB = async (id, mode, theme) => {
 
 const getUserInfo = async (userId, mode) => await osuApi
     .getUser({ u: escapeStringRegexp(userId), m: mode })
-    .catch(() => false);
+    .catch((e) => {
+      console.log("Error: " + e);
+      return false
+    });
 
 app.get("/u/:userId", async (req, res) => {
   // const mode = ["std", "taiko", "ctb", "mania"];
