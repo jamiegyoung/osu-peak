@@ -10,6 +10,8 @@ const { profile } = require("console");
 
 const osuApi = new osu.Api(apiKey);
 
+// TODO: refactor
+
 // Thanks https://stackoverflow.com/a/3368118 !
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
   if (typeof stroke === "undefined") {
@@ -62,7 +64,7 @@ const generateImageFromDB = async (id, mode, theme) => {
 
   const canvas = createCanvas(400, 100);
   const ctx = canvas.getContext("2d");
-  registerFont("./media/Torus.otf", { family: "Torus" });
+  registerFont("./assets/Torus.otf", { family: "Torus" });
 
   // Generate background
   ctx.fillStyle = backgroundColor;
@@ -71,20 +73,51 @@ const generateImageFromDB = async (id, mode, theme) => {
   // Clip everything into the roundrect
   ctx.clip();
 
-  // Get image
+  // Get background image
   const bg = await loadImage(
-    theme === "light" ? "./media/bg-light.png" : "./media/bg.png"
+    theme === "light" ? "./assets/bg-light.png" : "./assets/bg.png"
   );
   ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
   const getSrc = () => {
     if (userDetails.profileImage) return userDetails.profileImage;
-    return "./media/avatar-guest.png";
+    return "./assets/avatar-guest.png";
   };
+
+  const drawGameModeIcon = async (path) => {
+    const getPath = () => {
+      if (theme === 'light') {
+        return path + '-dark.png' 
+      }
+      return path + '.png'
+    }
+    const icon = await loadImage(getPath());
+    console.log(icon);
+    ctx.drawImage(icon, 300, 10, 75, 75);
+  };
+
+  switch (mode) {
+    case 0:
+      await drawGameModeIcon("./assets/std");
+      break;
+    case 1:
+      await drawGameModeIcon("./assets/taiko");
+      break;
+    case 2:
+      await drawGameModeIcon("./assets/ctb");
+      break;
+    case 3:
+      await drawGameModeIcon("./assets/mania");
+      break;
+    default:
+      await drawGameModeIcon("./assets/std");
+      break;
+  }
 
   ctx.strokeStyle = "#424242";
   roundRect(ctx, 5, 5, 90, 90, 5, true, true);
 
+  // Generate profile image
   const profileImage = new Image();
   profileImage.onload = () => {
     ctx.drawImage(profileImage, 10, 10, 80, 80);
@@ -96,8 +129,17 @@ const generateImageFromDB = async (id, mode, theme) => {
 
   // Generate Name
   ctx.fillStyle = textColor;
-  ctx.font = '400 31px "Torus"';
-  ctx.fillText(userName, 110, 35);
+
+  // Draw name and make sure it fits
+  const drawName = () => {
+    ctx.font = '400 31px "Torus"';
+    if (userName.length > 12) {
+      ctx.font = '400 26px "Torus"';
+    }
+    ctx.fillText(userName, 110, 35);
+  };
+
+  drawName();
 
   ctx.fillStyle = textColor;
   ctx.font = '400 22px "Torus"';
@@ -165,14 +207,17 @@ app.get("/u/:userId", async (req, res) => {
   const dateNow = new Date();
 
   if (dateNow - new Date(lastUpdated) < fiveMin) {
-    const img = await generateImageFromDB(userId, getMode(), req.query.theme);
-    res.writeHead(200, {
-      "Content-Type": "image/png",
-      "Content-Length": img.length,
-    });
+    if (await db.getUserDetails(userId, getMode())) {
+      console.log('rate limiting');
+      const img = await generateImageFromDB(userId, getMode(), req.query.theme);
+      res.writeHead(200, {
+        "Content-Type": "image/png",
+        "Content-Length": img.length,
+      });
 
-    res.end(img);
-    return;
+      res.end(img);
+      return;
+    }
   }
 
   const user = await getUserInfo(userId, getMode());
