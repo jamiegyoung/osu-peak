@@ -118,18 +118,9 @@ const generateImageFromDB = async (id, mode, theme) => {
   return Buffer.from(base64Data, "base64");
 };
 
-const getUserInfo = async (userId, mode) => {
-  const user = await osuApi
+const getUserInfo = async (userId, mode) => await osuApi
     .getUser({ u: escapeStringRegexp(userId), m: mode })
     .catch(() => false);
-
-  if (!user) {
-    res.status(400).send("Invalid user");
-    return;
-  }
-
-  return user;
-};
 
 app.get("/u/:userId", async (req, res) => {
   // const mode = ["std", "taiko", "ctb", "mania"];
@@ -180,6 +171,11 @@ app.get("/u/:userId", async (req, res) => {
 
   const user = await getUserInfo(userId, getMode());
 
+  if (!user) {
+    res.status(400).send("Invalid user");
+    return;
+  }
+
   const currentRank = user.pp.rank ? user.pp.rank : -1;
   const prevDetails = await db.getUserDetails(user.id, getMode());
 
@@ -226,7 +222,7 @@ app.get("/u/:userId", async (req, res) => {
   return;
 });
 
-app.listen(3000);
+app.listen(7527);
 
 const loadProfileImageBuffer = (id) =>
   new Promise((resolve, reject) => {
