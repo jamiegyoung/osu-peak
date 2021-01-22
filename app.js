@@ -4,10 +4,8 @@ const osu = require("node-osu");
 const https = require("https");
 const escapeStringRegexp = require("escape-string-regexp");
 const { createCanvas, loadImage, registerFont, Image } = require("canvas");
-const { apiKey } = require("./config.json");
-const db = require("./databaseHandler");
-const { profile } = require("console");
-
+const { apiKey } = require("./configs/osu.json");
+const db = require("./database-handler");
 const osuApi = new osu.Api(apiKey);
 
 // TODO: refactor
@@ -64,7 +62,7 @@ const generateImageFromDB = async (id, mode, theme) => {
 
   const canvas = createCanvas(400, 100);
   const ctx = canvas.getContext("2d");
-  registerFont("./assets/Torus.otf", { family: "Torus" });
+  registerFont("./fonts/Torus.otf", { family: "Torus" });
 
   // Generate background
   ctx.fillStyle = backgroundColor;
@@ -75,13 +73,13 @@ const generateImageFromDB = async (id, mode, theme) => {
 
   // Get background image
   const bg = await loadImage(
-    theme === "light" ? "./assets/bg-light.png" : "./assets/bg.png"
+    theme === "light" ? "./images/bg-light.png" : "./images/bg.png"
   );
   ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
   const getSrc = () => {
     if (userDetails.profileImage) return userDetails.profileImage;
-    return "./assets/avatar-guest.png";
+    return "./images/avatar-guest.png";
   };
 
   const drawGameModeIcon = async (path) => {
@@ -97,19 +95,19 @@ const generateImageFromDB = async (id, mode, theme) => {
 
   switch (mode) {
     case 0:
-      await drawGameModeIcon("./assets/std");
+      await drawGameModeIcon("./images/std");
       break;
     case 1:
-      await drawGameModeIcon("./assets/taiko");
+      await drawGameModeIcon("./images/taiko");
       break;
     case 2:
-      await drawGameModeIcon("./assets/ctb");
+      await drawGameModeIcon("./images/ctb");
       break;
     case 3:
-      await drawGameModeIcon("./assets/mania");
+      await drawGameModeIcon("./images/mania");
       break;
     default:
-      await drawGameModeIcon("./assets/std");
+      await drawGameModeIcon("./images/std");
       break;
   }
 

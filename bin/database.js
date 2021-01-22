@@ -1,34 +1,11 @@
-const fs = require("fs");
+const sqlite3 = require("sqlite3");
 const path = require("path");
 const ora = require("ora");
-const sqlite3 = require("sqlite3");
 const spinner = ora("").start();
 
-const handleConfig = () => {
-  spinner.text = "Checking config";
-  const configPath = path.resolve("config.json");
-
-  if (!fs.existsSync(configPath)) {
-    spinner.text = "Generating config";
-    spinner.color = "blue";
-
-    const configData = JSON.stringify({
-      apiKey: "",
-    });
-
-    try {
-      spinner.text = "Writing config";
-      fs.writeFileSync(configPath, configData, { flag: "wx" });
-    } catch (error) {
-      spinner.warn(
-        "Failed to write config file, maybe other instances of the sever are running?"
-      );
-    }
-  }
-};
-
-const createUsersTable = (db) => {
-  spinner.text = "Creating users table in database";
+const createTables = async (db) => {
+  spinner.text = "Generating databases";
+  spinner.color = "blue";
   db.run(
     `CREATE TABLE IF NOT EXISTS users (
       id TEXT,
@@ -40,7 +17,7 @@ const createUsersTable = (db) => {
       if (err) spinner.warn("An error occured when creating the user table");
     }
   );
-  
+
   spinner.text = "Creating std table in database";
   db.run(
     `CREATE TABLE IF NOT EXISTS std (
@@ -50,6 +27,7 @@ const createUsersTable = (db) => {
       )`,
     (_runRes, err) => {
       if (err) spinner.warn("An error occured when creating the user table");
+      spinner.info("Created std table");
     }
   );
 
@@ -62,6 +40,7 @@ const createUsersTable = (db) => {
       )`,
     (_runRes, err) => {
       if (err) spinner.warn("An error occured when creating the user table");
+      spinner.info("Created taiko table");
     }
   );
 
@@ -74,6 +53,7 @@ const createUsersTable = (db) => {
       )`,
     (_runRes, err) => {
       if (err) spinner.warn("An error occured when creating the user table");
+      spinner.info("Created ctb table");
     }
   );
 
@@ -86,21 +66,23 @@ const createUsersTable = (db) => {
       )`,
     (_runRes, err) => {
       if (err) spinner.warn("An error occured when creating the user table");
+      spinner.info("Created mania table");
     }
   );
 };
 
-const handleDatabase = () => {
+const checkDatabase = () => {
+  spinner.prefixText = "database-check:";
   spinner.text = "Checking database";
   spinner.color = "green";
-
   const dbPath = path.resolve("./database.db");
 
   try {
     const db = new sqlite3.Database(dbPath);
     db.get("SELECT * FROM users", (err) => {
       if (err) {
-        createUsersTable(db);
+        spinner.info("Database doesn't exist, generating...")
+        createTables(db);
       }
     });
   } catch (error) {
@@ -108,14 +90,8 @@ const handleDatabase = () => {
       "Potential invalid database setup, an error occured when attempting to fix"
     );
   }
+  spinner.succeed("Checked databases")
+  return
 };
 
-spinner.prefixText = "start script:";
-
-spinner.color = "green";
-handleConfig();
-handleDatabase();
-
-spinner.prefixText = "";
-
-spinner.succeed("Everything checked! Starting server");
+module.exports = { checkDatabase };
