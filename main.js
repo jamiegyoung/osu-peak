@@ -93,7 +93,7 @@ const generateImageFromDB = async (id, mode, theme) => {
     }
     const icon = await loadImage(getPath());
     console.log(icon);
-    ctx.drawImage(icon, 300, 10, 75, 75);
+    ctx.drawImage(icon, 300, 12, 75, 75);
   };
 
   switch (mode) {
