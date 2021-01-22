@@ -92,7 +92,6 @@ const generateImageFromDB = async (id, mode, theme) => {
       return path + '.png'
     }
     const icon = await loadImage(getPath());
-    console.log(icon);
     ctx.drawImage(icon, 300, 12, 75, 75);
   };
 
@@ -208,7 +207,6 @@ app.get("/u/:userId", async (req, res) => {
 
   if (dateNow - new Date(lastUpdated) < fiveMin) {
     if (await db.getUserDetails(userId, getMode())) {
-      console.log('rate limiting');
       const img = await generateImageFromDB(userId, getMode(), req.query.theme);
       res.writeHead(200, {
         "Content-Type": "image/png",
