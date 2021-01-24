@@ -1,5 +1,6 @@
 import sqlite3 from "sqlite3";
 import { promisify } from "util";
+import { Mode } from './types';
 
 const db = new sqlite3.Database("./database.db", (err: any) => {
   if (err) throw new Error("Could not connect to database!");
@@ -22,7 +23,7 @@ export const getLastUpdated = (id: number) =>
 
 export const getUserDetails = async (
   id: number,
-  mode?: number
+  mode?: Mode
 ): Promise<any> => {
   if (mode === 0)
     return dbGet("SELECT peakRank, peakAcc FROM std WHERE id = ?", [id]);
@@ -39,7 +40,7 @@ export const getUserDetails = async (
   return dbGet("SELECT * FROM users WHERE id = ?", [id]);
 };
 
-const getUserExists = (id: number, mode?: number) => {
+const getUserExists = (id: number, mode?: Mode) => {
   if (mode === 0)
     return dbGet("SELECT id FROM std WHERE id = ?", [id]).then((user: any) =>
       user ? true : false
@@ -74,7 +75,7 @@ export const setLastUpdatedNow = async (id: number) => {
   dbRun("INSERT INTO users (id, lastUpdated) VALUES (?, ?)", [id, new Date()]);
 };
 
-const setPeakAcc = async (id: number, mode: number, peak: string) => {
+const setPeakAcc = async (id: number, mode: Mode, peak: string) => {
   const userExists = await getUserExists(id, mode);
   if (mode === 0) {
     if (userExists) {
@@ -105,7 +106,7 @@ const setPeakAcc = async (id: number, mode: number, peak: string) => {
   }
 };
 
-const setPeakRank = async (id: number, mode: number, peak: number) => {
+const setPeakRank = async (id: number, mode: Mode, peak: number) => {
   // God there must be a better way
   const userExists = await getUserExists(id, mode);
   if (mode === 0) {
@@ -139,7 +140,7 @@ const setPeakRank = async (id: number, mode: number, peak: number) => {
 
 export const setPeaks = async (
   id: number,
-  mode: number,
+  mode: Mode,
   peak: { rank?: number; acc?: string }
 ) => {
   if (peak.rank) {
