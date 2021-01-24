@@ -115,8 +115,6 @@ export const getById = async (req: any, res: any) => {
     user.accuracy === null ? undefined : user.accuracyFormatted;
 
   if (!prevDetails) {
-    console.log("hi should appear");
-
     const mode = getMode();
     await db.setPeaks(user.id, mode, {
       rank: currentRank,

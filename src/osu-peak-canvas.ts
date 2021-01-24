@@ -6,23 +6,47 @@ export enum Theme {
   light,
 }
 
+interface Options {
+  [property: string]: any;
+  mode: Mode;
+  theme: Theme;
+  peakRank?: string | number;
+  peakAcc?: string;
+  username?: string;
+  profilePicture?: Buffer;
+}
+
 export default class OsuPeakCanvas {
+  [property: string]: any;
   private canvas: any;
   private ctx: any;
   public theme: Theme;
-  public peakRank: string | number | undefined;
-  public peakAcc: string | undefined;
-  public username: string | undefined;
-  public profilePicture: Buffer | undefined;
   public mode: Mode;
+  public peakRank?: string | number;
+  public peakAcc?: string;
+  public username?: string;
+  public profilePicture?: Buffer;
 
-  constructor(width: number, height: number) {
+  constructor(
+    width: number,
+    height: number,
+    options: Options = { mode: 0, theme: Theme.dark }
+  ) {
     this.canvas = createCanvas(width, height);
-    this.theme = Theme.dark;
     this.ctx = this.canvas.getContext("2d");
-    this.mode = 0;
-    this.drawBackgroundImage();
+
     registerFont("./fonts/Torus.otf", { family: "Torus" });
+
+    for (const option in Object.keys(options)) {
+      if (this[option]) {
+        this[option] = options[option];
+      }
+    }
+
+    this.theme = options.theme;
+    this.mode = options.mode;
+
+    this.drawBackgroundImage();
   }
 
   private drawPeakRank() {
@@ -116,11 +140,11 @@ export default class OsuPeakCanvas {
   }
 
   public get backgroundColor(): string {
-    return this.theme === Theme.dark ? "#2A2226" : "#dedbdb";
+    return this.theme === Theme.light ? "#dedbdb" : "#2A2226";
   }
 
   public get textColor(): string {
-    return this.theme === Theme.dark ? "#ffffff" : "#000000";
+    return this.theme === Theme.light ? "#000000" : "#ffffff";
   }
 
   private async drawBackgroundImage() {
@@ -140,8 +164,9 @@ export default class OsuPeakCanvas {
 
     // Get background image
     const bg = await loadImage(
-      this.theme === Theme.dark ? "./images/bg.png" : "./images/bg-light.png"
+      this.theme === Theme.light ? "./images/bg-light.png" : "./images/bg.png"
     );
+
     this.ctx.drawImage(bg, 0, 0, this.canvas.width, this.canvas.height);
   }
 
