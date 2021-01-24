@@ -12,7 +12,7 @@ const checkConfig = () => {
   // The required configs for the app
   const configs = [
     {
-      path: path.resolve("./configs/osu.json"),
+      path: path.resolve("./src/configs/osu.json"),
       data: {
         apiKey: "",
       },

@@ -1,17 +1,35 @@
-const express = require("express");
+import express from "express";
 const app = express();
-const osu = require("node-osu");
-const https = require("https");
-const escapeStringRegexp = require("escape-string-regexp");
-const { createCanvas, loadImage, registerFont, Image } = require("canvas");
-const { apiKey } = require("./configs/osu.json");
-const db = require("./database-handler");
+import osu from "node-osu";
+import https from "https";
+import { createCanvas, loadImage, registerFont, Image } from "canvas";
+import { apiKey } from "./configs/osu.json";
+import * as db from "./database-handler";
+import { Mode } from "./types";
 const osuApi = new osu.Api(apiKey);
 
 // TODO: refactor
 
 // Thanks https://stackoverflow.com/a/3368118 !
-function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+
+function roundRect(
+  ctx: any,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius:
+    | number
+    | {
+        [side: number]: number;
+        tl: number;
+        tr: number;
+        br: number;
+        bl: number;
+      },
+  fill: boolean,
+  stroke: boolean
+) {
   if (typeof stroke === "undefined") {
     stroke = true;
   }
@@ -21,9 +39,17 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
   if (typeof radius === "number") {
     radius = { tl: radius, tr: radius, br: radius, bl: radius };
   } else {
-    var defaultRadius = { tl: 0, tr: 0, br: 0, bl: 0 };
-    for (var side in defaultRadius) {
-      radius[side] = radius[side] || defaultRadius[side];
+    const defaultRadius: {
+      [side: number]: number;
+      tl: number;
+      tr: number;
+      br: number;
+      bl: number;
+    } = { tl: 0, tr: 0, br: 0, bl: 0 };
+    for (const side in defaultRadius) {
+      if (defaultRadius.hasOwnProperty(side)) {
+        radius[side] = radius[side] || 0;
+      }
     }
   }
   ctx.beginPath();
@@ -50,12 +76,13 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
   }
 }
 
-const generateImageFromDB = async (id, mode, theme) => {
+const generateImageFromDB = async (id: number, mode: number, theme: any) => {
   const backgroundColor = theme === "light" ? "#dedbdb" : "#2A2226";
   const textColor = theme === "light" ? "#000000" : "#ffffff";
 
   const gameDetails = await db.getUserDetails(id, mode);
-  const userDetails = await db.getUserDetails(id, undefined);
+  const userDetails = await db.getUserDetails(id);
+
   const peakAcc = gameDetails.peakAcc;
   const peakRank = gameDetails.peakRank;
   const userName = userDetails.username;
@@ -82,13 +109,13 @@ const generateImageFromDB = async (id, mode, theme) => {
     return "./images/avatar-guest.png";
   };
 
-  const drawGameModeIcon = async (path) => {
+  const drawGameModeIcon = async (path: string) => {
     const getPath = () => {
-      if (theme === 'light') {
-        return path + '-dark.png' 
+      if (theme === "light") {
+        return path + "-dark.png";
       }
-      return path + '.png'
-    }
+      return path + ".png";
+    };
     const icon = await loadImage(getPath());
     ctx.drawImage(icon, 300, 12, 75, 75);
   };
@@ -119,7 +146,7 @@ const generateImageFromDB = async (id, mode, theme) => {
   profileImage.onload = () => {
     ctx.drawImage(profileImage, 10, 10, 80, 80);
   };
-  profileImage.onerror = (err) => {
+  profileImage.onerror = (err: Error) => {
     throw err;
   };
   profileImage.src = getSrc();
@@ -145,12 +172,8 @@ const generateImageFromDB = async (id, mode, theme) => {
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
-  if (peakAcc === null) {
-    peakAcc = "Bot";
-  }
-
   ctx.fillText("Peak Rank: " + formattedRank, 110, 65);
-  ctx.fillText(`Peak Acc: ${peakAcc}`, 110, 90);
+  ctx.fillText(`Peak Acc: ${peakAcc === null ? "Bot" : peakAcc}`, 110, 90);
 
   const base64Data = canvas
     .toDataURL("image/png")
@@ -159,26 +182,27 @@ const generateImageFromDB = async (id, mode, theme) => {
   return Buffer.from(base64Data, "base64");
 };
 
-const getUserInfo = async (userId, mode) =>
-  await osuApi
-    .getUser({ u: escapeStringRegexp(userId), m: mode })
-    .catch((e) => {
-      console.log("Error: " + e);
-      return false;
-    });
+const getUserInfo = (userId: number, mode: Mode) =>
+  osuApi.getUser({ u: userId.toString(), m: mode });
 
 app.get("/u/:userId", async (req, res) => {
-  // const mode = ["std", "taiko", "ctb", "mania"];
-
   // Test if the user id is a user id
-  if (!/^\d+$/.test(req.params.userId)) {
+
+  const userId: number = parseInt(req.params.userId, 10);
+
+  if (isNaN(userId)) {
     res.status(400).send("Invalid user id");
     return;
   }
 
   const getMode = () => {
     const mode = req.query.mode;
-    if (mode === 0 || mode === "std" || mode === "standard" || mode === "osu") {
+    if (
+      mode === "0" ||
+      mode === "std" ||
+      mode === "standard" ||
+      mode === "osu"
+    ) {
       return 0;
     }
 
@@ -197,29 +221,29 @@ app.get("/u/:userId", async (req, res) => {
     return 0;
   };
 
-  const userId = req.params.userId;
-
   const lastUpdated = await db.getLastUpdated(userId);
   const fiveMin = 5 * 60 * 1000;
-  const dateNow = new Date();
+  const dateNow: any = new Date();
+  const dateThen: any = new Date(lastUpdated);
 
-  if (dateNow - new Date(lastUpdated) < fiveMin) {
+  if (dateNow - dateThen < fiveMin) {
     if (await db.getUserDetails(userId, getMode())) {
-      const img = await generateImageFromDB(userId, getMode(), req.query.theme);
-      res.writeHead(200, {
-        "Content-Type": "image/png",
-        "Content-Length": img.length,
-      });
-
-      res.end(img);
+      sendImage(
+        await generateImageFromDB(userId, getMode(), req.query.theme),
+        res
+      );
       return;
     }
   }
 
-  const user = await getUserInfo(userId, getMode());
+  const user = await getUserInfo(userId, getMode()).catch((err) => err);
 
-  if (!user) {
-    res.status(400).send("Invalid user");
+  if (user instanceof Error) {
+    if (user.message === "Not found") {
+      res.status(404).send("User not found D:");
+      return;
+    }
+    res.status(500).send("500 Internal Server Error D:");
     return;
   }
 
@@ -238,7 +262,8 @@ app.get("/u/:userId", async (req, res) => {
   }
 
   if (prevDetails) {
-    let finalChanges = {};
+    const finalChanges: { rank?: number; acc?: string } = {};
+
     if (currentRank < prevDetails.peakRank) {
       finalChanges.rank = currentRank;
     }
@@ -258,20 +283,22 @@ app.get("/u/:userId", async (req, res) => {
 
   await db.setLastUpdatedNow(userId);
 
-  const img = await generateImageFromDB(userId, getMode(), req.query.theme);
+  sendImage(await generateImageFromDB(userId, getMode(), req.query.theme), res);
+  return;
+});
 
+const sendImage = (img: Buffer, res: any) => {
   res.writeHead(200, {
     "Content-Type": "image/png",
     "Content-Length": img.length,
   });
 
   res.end(img);
-  return;
-});
+};
 
 app.listen(7527);
 
-const loadProfileImageBuffer = (id) =>
+const loadProfileImageBuffer = (id: number): Promise<string> =>
   new Promise((resolve, reject) => {
     https
       .get(`https://a.ppy.sh/${id}`, (res) => {
@@ -283,7 +310,7 @@ const loadProfileImageBuffer = (id) =>
         });
       })
       .on("error", (e) => {
-        console.log("Got error when getting image: " + e.message);
+        // console.log("Got error when getting image: " + e.message);
         reject(e.message);
       });
   });
