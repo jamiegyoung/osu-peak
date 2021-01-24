@@ -29,8 +29,6 @@ export const getById = async (req: any, res: any) => {
         });
     });
 
-  // Thanks https://stackoverflow.com/a/3368118 !
-
   const generateImageFromDB = async (
     id: number,
     mode: Mode,
@@ -38,7 +36,7 @@ export const getById = async (req: any, res: any) => {
   ) => {
     const gameDetails = await db.getUserDetails(id, mode);
     const userDetails = await db.getUserDetails(id);
-    
+
     const osuPeakCanvas = new OsuPeakCanvas(400, 100);
     osuPeakCanvas.theme = imageTheme;
     osuPeakCanvas.mode = mode;

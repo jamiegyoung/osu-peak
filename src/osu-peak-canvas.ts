@@ -145,6 +145,7 @@ export default class OsuPeakCanvas {
     this.ctx.drawImage(bg, 0, 0, this.canvas.width, this.canvas.height);
   }
 
+  // Thanks https://stackoverflow.com/a/3368118 !
   private drawRoundRect(
     x: number,
     y: number,
