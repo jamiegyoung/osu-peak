@@ -41,17 +41,20 @@ Light theme taiko:
 ## Setup
 If you wish to set this up yourself, make sure you have [node](https://nodejs.org/en/), [npm](https://www.npmjs.com/) and [sqlite3](https://sqlite.org/download.html) installed, then clone the repository.
 
-Then to install all the required packages run
+Install all the required packages by running
 ```sh
 npm i
 ```
- and to start the local development server on port 3000, run
+and to setup the configuration/databases by using
+```sh
+npm run prestart
+```
+
+then fill in the required fields in the configs and run
 ```sh
 npm start
 ```
-
-
-
+which will check the config and database again and then start the server at http://localhost:7527/
 
 ## Contributing
 
