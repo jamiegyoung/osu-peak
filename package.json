@@ -1,36 +1,36 @@
 {
   "name": "osu-peak",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Generates an image of your osu peak rank and accuracy",
-  "main": "index.js",
+  "main": "dist/app.js",
   "scripts": {
-    "prestart": "node bin/start-script.js",
-    "start": "node app.js",
+    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
+    "build": "tsc",
+    "prestart": "node bin/start-script.js && npm run build",
+    "start": "node .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Jamie Young",
-  "license": "MIT",
-  "dependencies": {
-    "canvas": "^2.6.1",
-    "escape-string-regexp": "^4.0.0",
-    "express": "^4.17.1",
-    "gm": "^1.23.1",
-    "html-to-image": "^1.3.21",
-    "node-fetch": "^2.6.1",
-    "node-osu": "^2.2.0",
-    "ora": "^5.3.0",
-    "sqlite3": "^5.0.1"
-  },
-  "bin": {
-    "osu-peak": "startScript.js"
-  },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jamiegyoung/osu-peak.git"
   },
+  "author": "Jamie Young",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/jamiegyoung/osu-peak/issues"
   },
-  "homepage": "https://github.com/jamiegyoung/osu-peak#readme"
+  "homepage": "https://github.com/jamiegyoung/osu-peak#readme",
+  "dependencies": {
+    "@types/sqlite3": "^3.1.7",
+    "canvas": "^2.6.1",
+    "express": "^4.17.1",
+    "node-osu": "^2.2.0",
+    "sqlite3": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.11",
+    "ora": "^5.3.0",
+    "tslint": "^6.1.3",
+    "typescript": "^4.1.3"
+  }
 }

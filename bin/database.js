@@ -8,7 +8,7 @@ const createTables = async (db) => {
   spinner.color = "blue";
   db.run(
     `CREATE TABLE IF NOT EXISTS users (
-      id TEXT,
+      id INTEGER,
       username TEXT,
       profileImage TEXT,
       lastUpdated INTEGER
@@ -21,7 +21,7 @@ const createTables = async (db) => {
   spinner.text = "Creating std table in database";
   db.run(
     `CREATE TABLE IF NOT EXISTS std (
-      id TEXT,
+      id INTEGER,
       peakRank INTEGER,
       peakAcc REAL
       )`,
@@ -34,7 +34,7 @@ const createTables = async (db) => {
   spinner.text = "Creating taiko table in database";
   db.run(
     `CREATE TABLE IF NOT EXISTS taiko (
-      id TEXT,
+      id INTEGER,
       peakRank INTEGER,
       peakAcc REAL
       )`,
@@ -47,7 +47,7 @@ const createTables = async (db) => {
   spinner.text = "Creating ctb table in database";
   db.run(
     `CREATE TABLE IF NOT EXISTS ctb (
-      id TEXT,
+      id INTEGER,
       peakRank INTEGER,
       peakAcc REAL
       )`,
@@ -60,7 +60,7 @@ const createTables = async (db) => {
   spinner.text = "Creating mania table in database";
   db.run(
     `CREATE TABLE IF NOT EXISTS mania (
-      id TEXT,
+      id INTEGER,
       peakRank INTEGER,
       peakAcc REAL
       )`,
