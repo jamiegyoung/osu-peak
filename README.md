@@ -1,7 +1,7 @@
 # Osu Peak
 > Generates an image of your osu peak rank and accuracy
 
-_NOTE: This will only track from the first time you see your image, historical implementation may be coming later. If you wish to update your peak rank, message Jam#0001 and provide proof of that rank._ 
+_NOTE: This will only track from the first time you see your image, historical implementation may be coming later. If you wish to update your peak rank, message Jam#0001 on discord and provide proof of that rank._ 
 
 ![](https://osu.jamieyoung.tech/u/2836231)
 ![](https://osu.jamieyoung.tech/u/7671790?mode=mania&theme=light)
