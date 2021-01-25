@@ -7,7 +7,7 @@ export enum Theme {
 }
 
 interface Options {
-  [property: string]: any;
+  [key: string]: any;
   mode: Mode;
   theme: Theme;
   peakRank?: string | number;
@@ -37,9 +37,9 @@ export default class OsuPeakCanvas {
 
     registerFont("./fonts/Torus.otf", { family: "Torus" });
 
-    for (const option in Object.keys(options)) {
-      if (this[option]) {
-        this[option] = options[option];
+    for (const objectKey in options) {
+      if (Object.prototype.hasOwnProperty.call(options, objectKey)) {
+        this[objectKey] = options[objectKey];
       }
     }
 

@@ -37,16 +37,17 @@ export const getById = async (req: any, res: any) => {
     const gameDetails = await db.getUserDetails(id, mode);
     const userDetails = await db.getUserDetails(id);
 
-    const osuPeakCanvas = new OsuPeakCanvas(400, 100);
-    osuPeakCanvas.theme = imageTheme;
-    osuPeakCanvas.mode = mode;
+    const osuPeakCanvas = new OsuPeakCanvas(400, 100, {
+      theme: imageTheme,
+      mode,
+      peakRank: gameDetails.peakRank,
+      peakAcc: gameDetails.peakAcc,
+      username: userDetails.username
+    });
+
     osuPeakCanvas.profilePicture = userDetails.profileImage
       ? userDetails.profileImage
       : "./images/avatar-guest.png";
-
-    osuPeakCanvas.peakRank = gameDetails.peakRank;
-    osuPeakCanvas.peakAcc = gameDetails.peakAcc;
-    osuPeakCanvas.username = userDetails.username;
 
     return await osuPeakCanvas.generateImage();
   };
@@ -129,9 +130,12 @@ export const getById = async (req: any, res: any) => {
       finalChanges.rank = currentRank;
     }
 
-    if (user.accuracy > parseFloat(prevDetails.peakAcc.slice(0, -1))) {
-      finalChanges.acc = formattedAccuracy;
+    if (prevDetails.peakAcc) {
+      if (user.accuracy > parseFloat(prevDetails.peakAcc.slice(0, -1))) {
+        finalChanges.acc = formattedAccuracy;
+      }
     }
+
     const mode = getMode();
     await db.setPeaks(user.id, mode, finalChanges);
   }
