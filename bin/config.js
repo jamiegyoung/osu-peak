@@ -9,6 +9,11 @@ const checkConfig = () => {
   spinner.text = "Checking config";
   spinner.color = "green";
 
+  // Check if config folder exists
+  if(!fs.existsSync("./src/configs")) {
+    fs.mkdirSync("./src/configs")
+  }
+
   // The required configs for the app
   const configs = [
     {
