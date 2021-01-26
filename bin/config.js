@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 const ora = require("ora");
-const { config } = require("process");
 const spinner = ora("").start();
 
 const checkConfig = () => {
