@@ -3,11 +3,11 @@ import osu from "node-osu";
 import https from "https";
 import OsuPeakCanvas from "../osu-peak-canvas";
 import { apiKey } from "../configs/osu.json";
-import { Mode, Theme } from "../osu.types";
+import { Mode, Theme, UserDetails, GameDetails } from "../osu.types";
 
 const osuApi = new osu.Api(apiKey);
 
-export const getById = async (req: any, res: any) => {
+export const getById = async (req: any, res: any): Promise<void> => {
   const userId: number = parseInt(req.params.userId, 10);
 
   if (isNaN(userId)) {
@@ -15,7 +15,7 @@ export const getById = async (req: any, res: any) => {
     return;
   }
 
-  const getUserInfo = (id: number, mode: Mode) =>
+  const getUserInfo = (id: number, mode: Mode): Promise<osu.User> =>
     osuApi.getUser({ u: id.toString(), m: mode });
 
   const loadProfileImageBuffer = (id: number): Promise<string> =>
@@ -40,9 +40,9 @@ export const getById = async (req: any, res: any) => {
     id: number,
     mode: Mode,
     imageTheme: Theme
-  ) => {
-    const gameDetails = await db.getGameDetails(id, mode);
-    const userDetails = await db.getUserDetails(id);
+  ): Promise<Buffer> => {
+    const gameDetails: GameDetails = await db.getGameDetails(id, mode);
+    const userDetails: UserDetails = await db.getUserDetails(id);
 
     const osuPeakCanvas = new OsuPeakCanvas(400, 100, {
       theme: imageTheme,
@@ -56,8 +56,7 @@ export const getById = async (req: any, res: any) => {
     }
 
     osuPeakCanvas.profilePicture = userDetails.profileImage;
-
-    return await osuPeakCanvas.generateImage();
+    return osuPeakCanvas.generateImage();
   };
 
   const getMode = (): Mode => {
@@ -86,13 +85,12 @@ export const getById = async (req: any, res: any) => {
     return 0;
   };
 
-  const lastUpdated = await db.getLastUpdated(userId);
-  const fiveMin = 5 * 60 * 1000;
-  const dateNow: any = new Date();
-  const dateThen: any = new Date(lastUpdated);
+  const lastUpdated: Date = await db.getLastUpdatedDate(userId);
+  const fiveMin = 5 * 1000;
+  const dateNow: Date = new Date();
   const theme = req.query.theme === "light" ? Theme.light : Theme.dark;
 
-  if (dateNow - dateThen < fiveMin) {
+  if (dateNow.valueOf() - lastUpdated.valueOf() < fiveMin) {
     if (await db.getGameDetails(userId, getMode())) {
       sendImage(await generateImageFromDB(userId, getMode(), theme), res);
       return;
@@ -141,9 +139,9 @@ export const getById = async (req: any, res: any) => {
     await db.setPeaks(user.id, mode, finalChanges);
   }
 
-  const profileImage = await loadProfileImageBuffer(user.id).catch((e) => {
-    return undefined;
-  });
+  const profileImage = await loadProfileImageBuffer(user.id).catch(
+    () => undefined
+  );
 
   await db.setUserDetails(user.id, user.name, profileImage);
 
@@ -153,7 +151,7 @@ export const getById = async (req: any, res: any) => {
   return;
 };
 
-const sendImage = (img: Buffer, res: any) => {
+const sendImage = (img: Buffer, res: any): void => {
   res.writeHead(200, {
     "Content-Type": "image/png",
     "Content-Length": img.length,
