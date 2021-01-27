@@ -11,7 +11,7 @@ declare module "node-osu" {
      * @param {Boolean} [options.completeScores=false] When fetching scores also fetch the beatmap they are for (Allows getting accuracy)
      * @param {Boolean} [options.parseNumeric=false] Parse numeric properties into numbers. May have overflow
      */
-    constructor(apiKey: string, options: constructorOptions = { });
+    constructor(apiKey: string, options: constructorOptions = {});
 
     /**
      * Makes an api call

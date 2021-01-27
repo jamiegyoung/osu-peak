@@ -8,6 +8,6 @@ const main = async () => {
   await checkDatabase();
   spinner.prefixText = "";
   spinner.succeed("Everything checked! Starting server");
-}
+};
 
 main();

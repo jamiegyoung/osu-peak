@@ -1,13 +1,19 @@
 import * as db from "../database-handler";
 import osu from "node-osu";
 import https from "https";
+import OsuPeakCanvas from "../osu-peak-canvas";
 import { apiKey } from "../configs/osu.json";
-import { Mode } from "../types";
-import OsuPeakCanvas, { Theme } from "../osu-peak-canvas";
+import { Mode, Theme } from "../osu.types";
+
 const osuApi = new osu.Api(apiKey);
 
 export const getById = async (req: any, res: any) => {
-  // Test if the user id is a user id
+  const userId: number = parseInt(req.params.userId, 10);
+
+  if (isNaN(userId)) {
+    res.status(400).send("Invalid user id");
+    return;
+  }
 
   const getUserInfo = (id: number, mode: Mode) =>
     osuApi.getUser({ u: id.toString(), m: mode });
@@ -17,16 +23,17 @@ export const getById = async (req: any, res: any) => {
       https
         .get(`https://a.ppy.sh/${id}`, (imgRes) => {
           imgRes.setEncoding("base64");
-          let body = "data:" + imgRes.headers["content-type"] + ";base64,";
-          imgRes.on("data", (data) => (body += data));
-          imgRes.on("end", async () => {
-            resolve(body);
-          });
+          if (imgRes.headers["content-type"]) {
+            let body = "data:" + imgRes.headers["content-type"] + ";base64,";
+            imgRes.on("data", (data) => (body += data));
+            imgRes.on("end", async () => {
+              resolve(body);
+            });
+            return;
+          }
+          reject("Picture not found");
         })
-        .on("error", (e) => {
-          // console.log("Got error when getting image: " + e.message);
-          reject(e.message);
-        });
+        .on("error", (e) => reject(e.message));
     });
 
   const generateImageFromDB = async (
@@ -34,30 +41,24 @@ export const getById = async (req: any, res: any) => {
     mode: Mode,
     imageTheme: Theme
   ) => {
-    const gameDetails = await db.getUserDetails(id, mode);
+    const gameDetails = await db.getGameDetails(id, mode);
     const userDetails = await db.getUserDetails(id);
 
     const osuPeakCanvas = new OsuPeakCanvas(400, 100, {
       theme: imageTheme,
       mode,
-      peakRank: gameDetails.peakRank,
-      peakAcc: gameDetails.peakAcc,
-      username: userDetails.username
+      username: userDetails.username,
     });
 
-    osuPeakCanvas.profilePicture = userDetails.profileImage
-      ? userDetails.profileImage
-      : "./images/avatar-guest.png";
+    if (gameDetails) {
+      osuPeakCanvas.peakRank = gameDetails.peakRank;
+      osuPeakCanvas.peakAcc = gameDetails.peakAcc;
+    }
+
+    osuPeakCanvas.profilePicture = userDetails.profileImage;
 
     return await osuPeakCanvas.generateImage();
   };
-
-  const userId: number = parseInt(req.params.userId, 10);
-
-  if (isNaN(userId)) {
-    res.status(400).send("Invalid user id");
-    return;
-  }
 
   const getMode = (): Mode => {
     const mode = req.query.mode;
@@ -92,7 +93,7 @@ export const getById = async (req: any, res: any) => {
   const theme = req.query.theme === "light" ? Theme.light : Theme.dark;
 
   if (dateNow - dateThen < fiveMin) {
-    if (await db.getUserDetails(userId, getMode())) {
+    if (await db.getGameDetails(userId, getMode())) {
       sendImage(await generateImageFromDB(userId, getMode(), theme), res);
       return;
     }
@@ -110,7 +111,7 @@ export const getById = async (req: any, res: any) => {
   }
 
   const currentRank = user.pp.rank ? user.pp.rank : undefined;
-  const prevDetails = await db.getUserDetails(user.id, getMode());
+  const prevDetails = await db.getGameDetails(user.id, getMode());
 
   const formattedAccuracy =
     user.accuracy === null ? undefined : user.accuracyFormatted;
@@ -140,11 +141,11 @@ export const getById = async (req: any, res: any) => {
     await db.setPeaks(user.id, mode, finalChanges);
   }
 
-  await db.setUserDetails(
-    user.id,
-    user.name,
-    await loadProfileImageBuffer(user.id)
-  );
+  const profileImage = await loadProfileImageBuffer(user.id).catch((e) => {
+    return undefined;
+  });
+
+  await db.setUserDetails(user.id, user.name, profileImage);
 
   await db.setLastUpdatedNow(userId);
 

@@ -1,10 +1,5 @@
 import { createCanvas, loadImage, registerFont, Image } from "canvas";
-import { Mode } from "./types";
-
-export enum Theme {
-  dark,
-  light,
-}
+import { Mode, Theme } from "./osu.types";
 
 interface Options {
   [key: string]: any;
@@ -96,16 +91,18 @@ export default class OsuPeakCanvas {
     // Draw border
     this.ctx.strokeStyle = "#424242";
     this.drawRoundRect(5, 5, 90, 90, 5, true, true);
+    const profileImage: Image = new Image();
+    profileImage.onload = () => {
+      this.ctx.drawImage(profileImage, 10, 10, 80, 80);
+    };
+    profileImage.onerror = (err: Error) => {
+      throw err;
+    };
     if (this.profilePicture) {
-      const profileImage = new Image();
-      profileImage.onload = () => {
-        this.ctx.drawImage(profileImage, 10, 10, 80, 80);
-      };
-      profileImage.onerror = (err: Error) => {
-        throw err;
-      };
       profileImage.src = this.profilePicture;
+      return;
     }
+    profileImage.src = "./images/avatar-guest.png";
   }
 
   private async drawGameMode() {

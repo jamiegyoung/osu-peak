@@ -81,7 +81,7 @@ const checkDatabase = () => {
     const db = new sqlite3.Database(dbPath);
     db.get("SELECT * FROM users", (err) => {
       if (err) {
-        spinner.info("Database doesn't exist, generating...")
+        spinner.info("Database doesn't exist, generating...");
         createTables(db);
       }
     });
@@ -90,8 +90,8 @@ const checkDatabase = () => {
       "Potential invalid database setup, an error occured when attempting to fix"
     );
   }
-  spinner.succeed("Checked databases")
-  return
+  spinner.succeed("Checked databases");
+  return;
 };
 
 module.exports = { checkDatabase };

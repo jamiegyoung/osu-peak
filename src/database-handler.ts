@@ -1,6 +1,6 @@
 import sqlite3 from "sqlite3";
 import { promisify } from "util";
-import { Mode } from './types';
+import { Mode } from "./osu.types";
 
 const db = new sqlite3.Database("./database.db", (err: any) => {
   if (err) throw new Error("Could not connect to database!");
@@ -21,13 +21,22 @@ export const getLastUpdated = (id: number) =>
     res ? res.lastUpdated : false
   );
 
-export const getUserDetails = async (
-  id: number,
-  mode?: Mode
-): Promise<any> => {
-  if (mode === 0)
-    return dbGet("SELECT peakRank, peakAcc FROM std WHERE id = ?", [id]);
+interface GameDetails {
+  peakRank: number;
+  peakAcc: string;
+}
 
+interface UserDetails {
+  id: number;
+  username: string;
+  profileImage?: Buffer;
+  lastUpdated: number;
+}
+
+export const getGameDetails = async (
+  id: number,
+  mode: Mode
+): Promise<GameDetails> => {
   if (mode === 1)
     return dbGet("SELECT peakRank, peakAcc FROM taiko WHERE id = ?", [id]);
 
@@ -37,10 +46,13 @@ export const getUserDetails = async (
   if (mode === 3)
     return dbGet("SELECT peakRank, peakAcc FROM mania WHERE id = ?", [id]);
 
-  return dbGet("SELECT * FROM users WHERE id = ?", [id]);
+  return dbGet("SELECT peakRank, peakAcc FROM std WHERE id = ?", [id]);
 };
 
-const getUserExists = (id: number, mode?: Mode) => {
+export const getUserDetails = async (id: number): Promise<UserDetails> =>
+  dbGet("SELECT * FROM users WHERE id = ?", [id]);
+
+const getUserExists = (id: number, mode?: Mode): Promise<boolean> => {
   if (mode === 0)
     return dbGet("SELECT id FROM std WHERE id = ?", [id]).then((user: any) =>
       user ? true : false
@@ -66,7 +78,7 @@ const getUserExists = (id: number, mode?: Mode) => {
   );
 };
 
-export const setLastUpdatedNow = async (id: number) => {
+export const setLastUpdatedNow = async (id: number): Promise<void> => {
   if (await getUserExists(id))
     return dbRun("UPDATE users SET lastUpdated = ? WHERE id = ?", [
       new Date(),
@@ -155,9 +167,9 @@ export const setPeaks = async (
 export const setUserDetails = async (
   id: number,
   username: string,
-  profileImage: string
+  profileImage: string | undefined
 ) => {
-  if (await getUserExists(id, undefined)) {
+  if (await getUserExists(id)) {
     return dbRun(
       "UPDATE users SET username = ?, profileImage = ? WHERE id = ?",
       [username, profileImage, id]

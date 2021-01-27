@@ -9,8 +9,8 @@ const checkConfig = () => {
   spinner.color = "green";
 
   // Check if config folder exists
-  if(!fs.existsSync("./src/configs")) {
-    fs.mkdirSync("./src/configs")
+  if (!fs.existsSync("./src/configs")) {
+    fs.mkdirSync("./src/configs");
   }
 
   // The required configs for the app
@@ -33,7 +33,7 @@ const checkConfig = () => {
     }
     return;
   });
-  
+
   spinner.succeed("Configs checked");
 };
 
