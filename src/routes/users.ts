@@ -126,7 +126,6 @@ export const getById = async (req: any, res: any): Promise<void> => {
     };
 
     const osutrackRankAcc = await osuTrack.getPeakRankAcc(user.id, mode);
-    console.log(osutrackRankAcc);
 
     if (osutrackRankAcc) {
       if (osutrackRankAcc.peakRank) {
