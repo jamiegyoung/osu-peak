@@ -4,6 +4,7 @@ import https from "https";
 import OsuPeakCanvas from "../osu-peak-canvas";
 import { apiKey } from "../configs/osu.json";
 import { Mode, Theme, UserDetails, GameDetails } from "../osu.types";
+import OsuTrack from "../interfaces/OsuTrack";
 
 const osuApi = new osu.Api(apiKey);
 
@@ -116,10 +117,32 @@ export const getById = async (req: any, res: any): Promise<void> => {
 
   if (!prevDetails) {
     const mode = getMode();
-    await db.setPeaks(user.id, mode, {
+
+    const osuTrack = new OsuTrack();
+
+    const peak = {
       rank: currentRank,
       acc: formattedAccuracy,
-    });
+    };
+
+    const osutrackRankAcc = await osuTrack.getPeakRankAcc(user.id, mode);
+    console.log(osutrackRankAcc);
+
+    if (osutrackRankAcc) {
+      if (osutrackRankAcc.peakRank) {
+        if (osutrackRankAcc.peakRank < currentRank) {
+          peak.rank = osutrackRankAcc.peakRank;
+        }
+      }
+
+      if (osutrackRankAcc.peakAcc) {
+        if (osutrackRankAcc.peakAccValue > user.accuracyFormatted) {
+          peak.acc = osutrackRankAcc.peakAcc;
+        }
+      }
+    }
+
+    await db.setPeaks(user.id, mode, peak);
   }
 
   if (prevDetails) {

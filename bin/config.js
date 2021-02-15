@@ -21,6 +21,12 @@ const checkConfig = () => {
         apiKey: "",
       },
     },
+    {
+      path: path.resolve("./src/configs/osutrack.json"),
+      data: {
+        link: "https://osutrack-api.ameo.dev",
+      }
+    }
   ];
 
   // Check if the configs exist
