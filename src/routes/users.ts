@@ -135,7 +135,7 @@ export const getById = async (req: any, res: any): Promise<void> => {
       }
 
       if (osutrackRankAcc.peakAcc) {
-        if (osutrackRankAcc.peakAccValue > user.accuracyFormatted) {
+        if (osutrackRankAcc.peakAccValue > user.accuracy) {
           peak.acc = osutrackRankAcc.peakAcc;
         }
       }
