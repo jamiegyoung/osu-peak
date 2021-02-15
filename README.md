@@ -12,10 +12,10 @@ _NOTE: This will check [osu!track](https://www.ameobea.me/osutrack/) for your pr
 Insert your osu user id into this link <https://osu.jamieyoung.tech/u/[userid]> and add it to your user page.
 
 Optional parameters are
-|Param|required|Description      |Options           |
-|-----|--------|-----------------|------------------|
-|theme|❌|changes the theme|light / other|
-|mode |❌|changes the mode |refer to the mode chart below|
+|Param|Description      |Options           |
+|-----|-----------------|------------------|
+|theme|changes the theme|light / other|
+|mode |changes the mode |refer to the mode chart below|
 
 
 ###  Mode chart
