@@ -40,7 +40,7 @@ const checkConfig = () => {
     return;
   });
 
-  spinner.succeed("Configs checked");
+  spinner.succeed("Configs checked and passed");
 };
 
 const generateConfig = (config) => {
@@ -78,4 +78,4 @@ const generateConfig = (config) => {
   }
 };
 
-module.exports = { checkConfig };
+checkConfig()

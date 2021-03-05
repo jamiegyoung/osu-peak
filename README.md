@@ -37,24 +37,47 @@ Light theme taiko:
 [img]https://osu.jamieyoung.tech/u/2836231?mode=taiko&theme=light[/img]
 ```
 
-
 ## Setup
-If you wish to set this up yourself, make sure you have [node](https://nodejs.org/en/), [npm](https://www.npmjs.com/) and [sqlite3](https://sqlite.org/download.html) installed, then clone the repository.
+If you need a database/config refer to the [database / config setup](#database-and-config-setup)
 
-Install all the required packages by running
+A Dockerfile is present and can be used by running
 ```sh
-npm i
+docker build -t osu-peak .
 ```
-and to setup the configuration/databases by using
+and then
 ```sh
-npm run prestart
+docker run -p 7527:7527 -v /path/to/local/db:/database -e DB_PATH=/database/database.db osu-peak 
 ```
 
-then fill in the required fields in the configs and run
+## Dev setup
+Run the following commands to setup the repo for development
 ```sh
-npm start
+npm install
 ```
-which will check the config and database again and then start the server at http://localhost:7527/
+
+If you need a database/config refer to the [database / config setup](#database-and-config-setup)
+
+To start the development server run
+```sh
+npm run build; npm run start-dev
+```
+
+## Database and config setup
+If you have not installed the npm packages, do so now
+```sh
+npm install
+```
+
+To generate the database in the normal directory run
+```sh
+npm run make-db
+```
+
+To generate the config run
+```sh
+npm run make-config
+```
+and make sure to populate it
 
 ## Contributing
 

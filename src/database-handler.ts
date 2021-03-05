@@ -2,8 +2,13 @@ import sqlite3 from "sqlite3";
 import { promisify } from "util";
 import { Mode, UserDetails, GameDetails } from "./osu.types";
 
-const db = new sqlite3.Database("./database.db", (err: any) => {
-  if (err) throw new Error("Could not connect to database!");
+const dbPath = process.env["DB_PATH"]
+
+if (!dbPath)
+  throw new Error("DB not given through path");
+
+const db = new sqlite3.Database(dbPath, (err: any) => {
+  if (err) throw new Error(`Could not connect to database at ${dbPath}!`);
 });
 
 const dbGet = promisify(db.get).bind(db) as (

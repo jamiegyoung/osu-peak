@@ -4,10 +4,11 @@
   "description": "Generates an image of your osu peak rank and accuracy",
   "main": "dist/app.js",
   "scripts": {
-    "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
+    "make-db": "node bin/database.js",
+    "make-config": "node bin/config.js",
     "build": "tsc",
-    "prestart": "node bin/start-script.js && npm run build",
     "start": "node .",
+    "start-dev": "set DB_PATH=./database/database.db&& node .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,18 +22,18 @@
   },
   "homepage": "https://github.com/jamiegyoung/osu-peak#readme",
   "dependencies": {
-    "@types/sqlite3": "^3.1.7",
     "canvas": "^2.6.1",
     "express": "^4.17.1",
     "node-fetch": "^2.6.1",
     "node-osu": "^2.2.0",
-    "sqlite3": "^5.0.1"
+    "ora": "^5.3.0",
+    "sqlite3": "^5.0.1",
+    "typescript": "^4.2.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.11",
+    "@types/node": "^14.14.31",
     "@types/node-fetch": "^2.5.8",
-    "ora": "^5.3.0",
-    "tslint": "^6.1.3",
-    "typescript": "^4.1.5"
+    "@types/sqlite3": "^3.1.7"
   }
 }

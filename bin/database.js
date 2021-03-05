@@ -1,5 +1,6 @@
 const sqlite3 = require("sqlite3");
 const path = require("path");
+const fs = require("fs");
 const ora = require("ora");
 const spinner = ora("").start();
 
@@ -75,7 +76,14 @@ const checkDatabase = () => {
   spinner.prefixText = "database-check:";
   spinner.text = "Checking database";
   spinner.color = "green";
-  const dbPath = path.resolve("./database.db");
+  const dbPath = path.resolve("./database/database.db");
+
+  spinner.text = "Checking database dir";
+  spinner.color = "green";
+  if (!fs.existsSync(path.dirname(dbPath))) {
+    spinner.info("Making database path");
+    fs.mkdirSync(path.dirname(dbPath));
+  }
 
   try {
     const db = new sqlite3.Database(dbPath);
@@ -90,8 +98,8 @@ const checkDatabase = () => {
       "Potential invalid database setup, an error occured when attempting to fix"
     );
   }
-  spinner.succeed("Checked databases");
+  spinner.succeed("Checked databases and passed");
   return;
 };
 
-module.exports = { checkDatabase };
+checkDatabase();
