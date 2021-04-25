@@ -53,10 +53,6 @@ const generateImageFromDB = async (
 };
 
 const getMode = (mode: String): Mode => {
-  if (mode === "0" || mode === "std" || mode === "standard" || mode === "osu") {
-    return 0;
-  }
-
   if (mode === "1" || mode === "taiko") {
     return 1;
   }

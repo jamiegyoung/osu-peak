@@ -8,66 +8,37 @@ const createTables = async (db) => {
   spinner.text = "Generating databases";
   spinner.color = "blue";
   db.run(
-    `CREATE TABLE IF NOT EXISTS users (
-      id INTEGER,
-      username TEXT,
-      profileImage TEXT,
-      lastUpdated INTEGER
-      )`,
+    "CREATE TABLE IF NOT EXISTS users (id INTEGER, username TEXT, profileImage TEXT, lastUpdated INTEGER)",
     (_runRes, err) => {
       if (err) spinner.warn("An error occured when creating the user table");
     }
   );
 
-  spinner.text = "Creating std table in database";
   db.run(
-    `CREATE TABLE IF NOT EXISTS std (
-      id INTEGER,
-      peakRank INTEGER,
-      peakAcc REAL
-      )`,
+    "CREATE TABLE IF NOT EXISTS std (id INTEGER, peakRank INTEGER, peakAcc REAL)",
     (_runRes, err) => {
       if (err) spinner.warn("An error occured when creating the user table");
-      spinner.info("Created std table");
     }
   );
 
-  spinner.text = "Creating taiko table in database";
   db.run(
-    `CREATE TABLE IF NOT EXISTS taiko (
-      id INTEGER,
-      peakRank INTEGER,
-      peakAcc REAL
-      )`,
+    "CREATE TABLE IF NOT EXISTS taiko (id INTEGER, peakRank INTEGER, peakAcc REAL)",
     (_runRes, err) => {
       if (err) spinner.warn("An error occured when creating the user table");
-      spinner.info("Created taiko table");
     }
   );
 
-  spinner.text = "Creating ctb table in database";
   db.run(
-    `CREATE TABLE IF NOT EXISTS ctb (
-      id INTEGER,
-      peakRank INTEGER,
-      peakAcc REAL
-      )`,
+    "CREATE TABLE IF NOT EXISTS ctb (id INTEGER, peakRank INTEGER, peakAcc REAL)",
     (_runRes, err) => {
       if (err) spinner.warn("An error occured when creating the user table");
-      spinner.info("Created ctb table");
     }
   );
 
-  spinner.text = "Creating mania table in database";
   db.run(
-    `CREATE TABLE IF NOT EXISTS mania (
-      id INTEGER,
-      peakRank INTEGER,
-      peakAcc REAL
-      )`,
+    "CREATE TABLE IF NOT EXISTS mania (id INTEGER, peakRank INTEGER, peakAcc REAL)",
     (_runRes, err) => {
       if (err) spinner.warn("An error occured when creating the user table");
-      spinner.info("Created mania table");
     }
   );
 };

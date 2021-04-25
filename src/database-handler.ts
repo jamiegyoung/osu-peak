@@ -2,10 +2,9 @@ import sqlite3 from "sqlite3";
 import { promisify } from "util";
 import { Mode, UserDetails, GameDetails } from "./osu.types";
 
-const dbPath = process.env["DB_PATH"]
+const dbPath = process.env["DB_PATH"];
 
-if (!dbPath)
-  throw new Error("DB not given through path");
+if (!dbPath) throw new Error("DB not given through path");
 
 const db = new sqlite3.Database(dbPath, (err: any) => {
   if (err) throw new Error(`Could not connect to database at ${dbPath}!`);
@@ -86,39 +85,27 @@ const setPeakAcc = async (
 ): Promise<void> => {
   const userExists = await getUserExists(id, mode);
   if (mode === 0) {
-    if (userExists) {
-      dbRun("UPDATE std SET peakAcc = ? WHERE id = ?", [peak, id]);
-      return;
-    }
-    dbRun("INSERT INTO std (id, peakAcc) VALUES (?, ?)", [id, peak]);
-    return;
+    return userExists
+      ? dbRun("UPDATE std SET peakAcc = ? WHERE id = ?", [peak, id])
+      : dbRun("INSERT INTO std (id, peakAcc) VALUES (?, ?)", [id, peak]);
   }
 
   if (mode === 1) {
-    if (userExists) {
-      dbRun("UPDATE taiko SET peakAcc = ? WHERE id = ?", [peak, id]);
-      return;
-    }
-    dbRun("INSERT INTO taiko (id, peakAcc) VALUES (?, ?)", [id, peak]);
-    return;
+    return userExists
+      ? dbRun("UPDATE taiko SET peakAcc = ? WHERE id = ?", [peak, id])
+      : dbRun("INSERT INTO taiko (id, peakAcc) VALUES (?, ?)", [id, peak]);
   }
 
   if (mode === 2) {
-    if (userExists) {
-      dbRun("UPDATE ctb SET peakAcc = ? WHERE id = ?", [peak, id]);
-      return;
-    }
-    dbRun("INSERT INTO ctb (id, peakAcc) VALUES (?, ?)", [id, peak]);
-    return;
+    return userExists
+      ? dbRun("UPDATE ctb SET peakAcc = ? WHERE id = ?", [peak, id])
+      : dbRun("INSERT INTO ctb (id, peakAcc) VALUES (?, ?)", [id, peak]);
   }
 
   if (mode === 3) {
-    if (userExists) {
-      dbRun("UPDATE mania SET peakAcc = ? WHERE id = ?", [peak, id]);
-      return;
-    }
-    dbRun("INSERT INTO mania (id, peakAcc) VALUES (?, ?)", [id, peak]);
-    return;
+    return userExists
+      ? dbRun("UPDATE mania SET peakAcc = ? WHERE id = ?", [peak, id])
+      : dbRun("INSERT INTO mania (id, peakAcc) VALUES (?, ?)", [id, peak]);
   }
 };
 
@@ -130,39 +117,27 @@ const setPeakRank = async (
   // God there must be a better way
   const userExists = await getUserExists(id, mode);
   if (mode === 0) {
-    if (userExists) {
-      dbRun("UPDATE std SET peakRank = ? WHERE id = ?", [peak, id]);
-      return;
-    }
-    dbRun("INSERT INTO std (id, peakRank) VALUES (?, ?)", [id, peak]);
-    return;
+    return userExists
+      ? dbRun("UPDATE std SET peakRank = ? WHERE id = ?", [peak, id])
+      : dbRun("INSERT INTO std (id, peakRank) VALUES (?, ?)", [id, peak]);
   }
 
   if (mode === 1) {
-    if (userExists) {
-      dbRun("UPDATE taiko SET peakRank = ? WHERE id = ?", [peak, id]);
-      return;
-    }
-    dbRun("INSERT INTO taiko (id, peakRank) VALUES (?, ?)", [id, peak]);
-    return;
+    return userExists
+      ? dbRun("UPDATE taiko SET peakRank = ? WHERE id = ?", [peak, id])
+      : dbRun("INSERT INTO taiko (id, peakRank) VALUES (?, ?)", [id, peak]);
   }
 
   if (mode === 2) {
-    if (userExists) {
-      dbRun("UPDATE ctb SET peakRank = ? WHERE id = ?", [peak, id]);
-      return;
-    }
-    dbRun("INSERT INTO ctb (id, peakRank) VALUES (?, ?)", [id, peak]);
-    return;
+    userExists
+      ? dbRun("UPDATE ctb SET peakRank = ? WHERE id = ?", [peak, id])
+      : dbRun("INSERT INTO ctb (id, peakRank) VALUES (?, ?)", [id, peak]);
   }
 
   if (mode === 3) {
-    if (userExists) {
-      dbRun("UPDATE mania SET peakRank = ? WHERE id = ?", [peak, id]);
-      return;
-    }
-    dbRun("INSERT INTO mania (id, peakRank) VALUES (?, ?)", [id, peak]);
-    return;
+    userExists
+      ? dbRun("UPDATE mania SET peakRank = ? WHERE id = ?", [peak, id])
+      : dbRun("INSERT INTO mania (id, peakRank) VALUES (?, ?)", [id, peak]);
   }
 };
 
