@@ -59,45 +59,38 @@ export const setLastUpdatedNow = async (id: number): Promise<void> => {
   dbRun("INSERT INTO users (id, lastUpdated) VALUES (?, ?)", [id, new Date()]);
 };
 
-const setPeakAcc = async (
+const setPeak = async (
   id: number,
   mode: Mode,
-  peak: string
-): Promise<void> => {
+  peak: number | string,
+  peakType: String
+) => {
   const userExists = await getUserExists(id, mode);
 
   if (userExists) {
-    await dbRun(`UPDATE ${modes[mode]} SET peakAcc = ? WHERE id = ?`, [
+    await dbRun(`UPDATE ${modes[mode]} SET ${peakType} = ? WHERE id = ?`, [
       peak,
       id,
     ]);
     return;
   }
-  await dbRun(`INSERT INTO ${modes[mode]} (id, peakAcc) VALUES (?, ?)`, [
+  await dbRun(`INSERT INTO ${modes[mode]} (id, ${peakType}) VALUES (?, ?)`, [
     id,
     peak,
   ]);
 };
+
+const setPeakAcc = async (
+  id: number,
+  mode: Mode,
+  peak: string
+): Promise<void> => setPeak(id, mode, peak, "peakAcc");
 
 const setPeakRank = async (
   id: number,
   mode: Mode,
   peak: number
-): Promise<void> => {
-  const userExists = await getUserExists(id, mode);
-
-  if (userExists) {
-    await dbRun(`UPDATE ${modes[mode]} SET peakRank = ? WHERE id = ?`, [
-      peak,
-      id,
-    ]);
-    return;
-  }
-  await dbRun(`INSERT INTO ${modes[mode]} (id, peakRank) VALUES (?, ?)`, [
-    id,
-    peak,
-  ]);
-};
+): Promise<void> => setPeak(id, mode, peak, "peakRank");
 
 export const setPeaks = async (
   id: number,
