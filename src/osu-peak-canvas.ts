@@ -173,55 +173,25 @@ export default class OsuPeakCanvas {
     y: number,
     width: number,
     height: number,
-    radius:
-      | number
-      | {
-          [side: number]: number;
-          tl: number;
-          tr: number;
-          br: number;
-          bl: number;
-        },
+    radius: number,
     fill: boolean,
     stroke: boolean
   ) {
-    if (typeof stroke === "undefined") {
-      stroke = true;
-    }
-    if (typeof radius === "undefined") {
-      radius = 5;
-    }
-    if (typeof radius === "number") {
-      radius = { tl: radius, tr: radius, br: radius, bl: radius };
-    } else {
-      const defaultRadius: {
-        [side: number]: number;
-        tl: number;
-        tr: number;
-        br: number;
-        bl: number;
-      } = { tl: 0, tr: 0, br: 0, bl: 0 };
-      for (const side in defaultRadius) {
-        if (defaultRadius.hasOwnProperty(side)) {
-          radius[side] = radius[side] || 0;
-        }
-      }
-    }
     this.ctx.beginPath();
-    this.ctx.moveTo(x + radius.tl, y);
-    this.ctx.lineTo(x + width - radius.tr, y);
-    this.ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
-    this.ctx.lineTo(x + width, y + height - radius.br);
+    this.ctx.moveTo(x + radius, y);
+    this.ctx.lineTo(x + width - radius, y);
+    this.ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    this.ctx.lineTo(x + width, y + height - radius);
     this.ctx.quadraticCurveTo(
       x + width,
       y + height,
-      x + width - radius.br,
+      x + width - radius,
       y + height
     );
-    this.ctx.lineTo(x + radius.bl, y + height);
-    this.ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
-    this.ctx.lineTo(x, y + radius.tl);
-    this.ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+    this.ctx.lineTo(x + radius, y + height);
+    this.ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    this.ctx.lineTo(x, y + radius);
+    this.ctx.quadraticCurveTo(x, y, x + radius, y);
     this.ctx.closePath();
     if (fill) {
       this.ctx.fill();

@@ -14,8 +14,6 @@ export default class OsuTrack {
   ): Promise<
     { peakRank: number; peakAcc: string; peakAccValue: number } | undefined
   > {
-    if (mode === undefined) return;
-
     const res = await this.makeRequest("/peak", { user: id, mode });
     if (!res || res.length !== 1) return undefined;
 

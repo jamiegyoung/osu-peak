@@ -11,15 +11,12 @@ const db = new sqlite3.Database(dbPath, (err: any) => {
   if (err) throw new Error(`Could not connect to database at ${dbPath}!`);
 });
 
-const dbGet = promisify(db.get).bind(db) as (
-  sql: string,
-  params: any[]
-) => Promise<any>;
+const sqlitePromisify = (x: Function) =>
+  promisify(x).bind(db) as (sql: string, params: any[]) => Promise<any>;
 
-const dbRun = promisify(db.run).bind(db) as (
-  sql: string,
-  params: any[]
-) => Promise<any>;
+const dbGet = sqlitePromisify(db.get);
+
+const dbRun = sqlitePromisify(db.run);
 
 export const getLastUpdatedDate = (id: number): Promise<Date> =>
   dbGet("SELECT lastUpdated FROM users WHERE id = ?", [id]).then(
@@ -87,31 +84,19 @@ const setPeakRank = async (
   mode: Mode,
   peak: number
 ): Promise<void> => {
-  // God there must be a better way
   const userExists = await getUserExists(id, mode);
-  if (mode === 0) {
-    return userExists
-      ? dbRun("UPDATE std SET peakRank = ? WHERE id = ?", [peak, id])
-      : dbRun("INSERT INTO std (id, peakRank) VALUES (?, ?)", [id, peak]);
-  }
 
-  if (mode === 1) {
-    return userExists
-      ? dbRun("UPDATE taiko SET peakRank = ? WHERE id = ?", [peak, id])
-      : dbRun("INSERT INTO taiko (id, peakRank) VALUES (?, ?)", [id, peak]);
+  if (userExists) {
+    await dbRun(`UPDATE ${modes[mode]} SET peakRank = ? WHERE id = ?`, [
+      peak,
+      id,
+    ]);
+    return;
   }
-
-  if (mode === 2) {
-    userExists
-      ? dbRun("UPDATE ctb SET peakRank = ? WHERE id = ?", [peak, id])
-      : dbRun("INSERT INTO ctb (id, peakRank) VALUES (?, ?)", [id, peak]);
-  }
-
-  if (mode === 3) {
-    userExists
-      ? dbRun("UPDATE mania SET peakRank = ? WHERE id = ?", [peak, id])
-      : dbRun("INSERT INTO mania (id, peakRank) VALUES (?, ?)", [id, peak]);
-  }
+  await dbRun(`INSERT INTO ${modes[mode]} (id, peakRank) VALUES (?, ?)`, [
+    id,
+    peak,
+  ]);
 };
 
 export const setPeaks = async (

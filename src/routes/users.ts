@@ -94,19 +94,36 @@ const setPeaksFromOsuTrack = async (
   const osutrackRankAcc = await osuTrack.getPeakRankAcc(user.id, mode);
 
   if (osutrackRankAcc) {
-    if (osutrackRankAcc.peakRank) {
-      if (osutrackRankAcc.peakRank < currentRank) {
-        peak.rank = osutrackRankAcc.peakRank;
-      }
+    if (osutrackRankAcc.peakRank < currentRank) {
+      peak.rank = osutrackRankAcc.peakRank;
     }
 
-    if (osutrackRankAcc.peakAcc) {
-      if (osutrackRankAcc.peakAccValue > user.accuracy) {
-        peak.acc = osutrackRankAcc.peakAcc;
-      }
+    if (osutrackRankAcc.peakAccValue > user.accuracy) {
+      peak.acc = osutrackRankAcc.peakAcc;
     }
   }
   await db.setPeaks(user.id, mode, peak);
+};
+
+const setPeaksFromPreviousDetails = async (
+  currentRank: any,
+  prevDetails: GameDetails,
+  user: any,
+  formattedAccuracy: any,
+  mode: Mode
+) => {
+  const finalChanges: { rank?: number; acc?: string } = {};
+
+  if (currentRank < prevDetails.peakRank) {
+    finalChanges.rank = currentRank;
+  }
+
+  if (prevDetails.peakAcc) {
+    if (user.accuracy > parseFloat(prevDetails.peakAcc.slice(0, -1))) {
+      finalChanges.acc = formattedAccuracy;
+    }
+  }
+  await db.setPeaks(user.id, mode, finalChanges);
 };
 
 const updateUserDetails = async (
@@ -136,21 +153,19 @@ const updateUserDetails = async (
   }
 
   if (prevDetails) {
-    const finalChanges: { rank?: number; acc?: string } = {};
-
-    if (currentRank < prevDetails.peakRank) {
-      finalChanges.rank = currentRank;
-    }
-
-    if (prevDetails.peakAcc) {
-      if (user.accuracy > parseFloat(prevDetails.peakAcc.slice(0, -1))) {
-        finalChanges.acc = formattedAccuracy;
-      }
-    }
-    await db.setPeaks(user.id, mode, finalChanges);
+    await setPeaksFromPreviousDetails(
+      currentRank,
+      prevDetails,
+      user,
+      formattedAccuracy,
+      mode
+    );
   }
 
-  const profileImage = await loadProfileImageBuffer(user.id);
+  // If no profile image is found, just set it as undefined so it defaults to the guest image
+  const profileImage = await loadProfileImageBuffer(user.id).catch(
+    () => undefined
+  );
 
   await db.setUserDetails(user.id, user.name, profileImage);
   return true;
