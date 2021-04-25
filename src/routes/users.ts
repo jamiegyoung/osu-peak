@@ -8,116 +8,103 @@ import OsuTrack from "../interfaces/OsuTrack";
 
 const osuApi = new osu.Api(apiKey);
 
-export const getById = async (req: any, res: any): Promise<void> => {
-  const userId: number = parseInt(req.params.userId, 10);
+const getUserInfo = (id: number, mode: Mode): Promise<osu.User> =>
+  osuApi.getUser({ u: id.toString(), m: mode });
 
-  if (isNaN(userId)) {
-    res.status(400).send("Invalid user id");
-    return;
+const loadProfileImageBuffer = (id: number): Promise<string> =>
+  new Promise((resolve, reject) => {
+    https
+      .get(`https://a.ppy.sh/${id}`, (imgRes) => {
+        imgRes.setEncoding("base64");
+        if (imgRes.headers["content-type"]) {
+          let body = "data:" + imgRes.headers["content-type"] + ";base64,";
+          imgRes.on("data", (data) => (body += data));
+          imgRes.on("end", async () => {
+            resolve(body);
+          });
+          return;
+        }
+        reject("Picture not found");
+      })
+      .on("error", (e) => reject(e.message));
+  });
+
+const generateImageFromDB = async (
+  id: number,
+  mode: Mode,
+  imageTheme: Theme
+): Promise<Buffer> => {
+  const gameDetails: GameDetails = await db.getGameDetails(id, mode);
+  const userDetails: UserDetails = await db.getUserDetails(id);
+
+  const osuPeakCanvas = new OsuPeakCanvas(400, 100, {
+    theme: imageTheme,
+    mode,
+    username: userDetails.username,
+  });
+
+  if (gameDetails) {
+    osuPeakCanvas.peakRank = gameDetails.peakRank;
+    osuPeakCanvas.peakAcc = gameDetails.peakAcc;
   }
 
-  const getUserInfo = (id: number, mode: Mode): Promise<osu.User> =>
-    osuApi.getUser({ u: id.toString(), m: mode });
+  osuPeakCanvas.profilePicture = userDetails.profileImage;
+  return osuPeakCanvas.generateImage();
+};
 
-  const loadProfileImageBuffer = (id: number): Promise<string> =>
-    new Promise((resolve, reject) => {
-      https
-        .get(`https://a.ppy.sh/${id}`, (imgRes) => {
-          imgRes.setEncoding("base64");
-          if (imgRes.headers["content-type"]) {
-            let body = "data:" + imgRes.headers["content-type"] + ";base64,";
-            imgRes.on("data", (data) => (body += data));
-            imgRes.on("end", async () => {
-              resolve(body);
-            });
-            return;
-          }
-          reject("Picture not found");
-        })
-        .on("error", (e) => reject(e.message));
-    });
-
-  const generateImageFromDB = async (
-    id: number,
-    mode: Mode,
-    imageTheme: Theme
-  ): Promise<Buffer> => {
-    const gameDetails: GameDetails = await db.getGameDetails(id, mode);
-    const userDetails: UserDetails = await db.getUserDetails(id);
-
-    const osuPeakCanvas = new OsuPeakCanvas(400, 100, {
-      theme: imageTheme,
-      mode,
-      username: userDetails.username,
-    });
-
-    if (gameDetails) {
-      osuPeakCanvas.peakRank = gameDetails.peakRank;
-      osuPeakCanvas.peakAcc = gameDetails.peakAcc;
-    }
-
-    osuPeakCanvas.profilePicture = userDetails.profileImage;
-    return osuPeakCanvas.generateImage();
-  };
-
-  const getMode = (): Mode => {
-    const mode = req.query.mode;
-    if (
-      mode === "0" ||
-      mode === "std" ||
-      mode === "standard" ||
-      mode === "osu"
-    ) {
-      return 0;
-    }
-
-    if (mode === "1" || mode === "taiko") {
-      return 1;
-    }
-
-    if (mode === "2" || mode === "ctb" || mode === "catch") {
-      return 2;
-    }
-
-    if (mode === "3" || mode === "mania") {
-      return 3;
-    }
-
+const getMode = (mode: String): Mode => {
+  if (mode === "0" || mode === "std" || mode === "standard" || mode === "osu") {
     return 0;
-  };
+  }
 
+  if (mode === "1" || mode === "taiko") {
+    return 1;
+  }
+
+  if (mode === "2" || mode === "ctb" || mode === "catch") {
+    return 2;
+  }
+
+  if (mode === "3" || mode === "mania") {
+    return 3;
+  }
+
+  return 0;
+};
+
+const checkRecentlyUpdated = async (userId: number): Promise<Boolean> => {
+  const dateNow: Date = new Date();
   const lastUpdated: Date = await db.getLastUpdatedDate(userId);
   const fiveMin = 5 * 1000;
-  const dateNow: Date = new Date();
-  const theme = req.query.theme === "light" ? Theme.light : Theme.dark;
-
   if (dateNow.valueOf() - lastUpdated.valueOf() < fiveMin) {
-    if (await db.getGameDetails(userId, getMode())) {
-      sendImage(await generateImageFromDB(userId, getMode(), theme), res);
-      return;
-    }
+    return true;
   }
+  return false;
+};
 
-  const user = await getUserInfo(userId, getMode()).catch((err) => err);
+const updateUserDetails = async (
+  userId: number,
+  mode: Mode,
+  res: any
+): Promise<Boolean> => {
+  const user = await getUserInfo(userId, mode).catch((err) => err);
 
   if (user instanceof Error) {
     if (user.message === "Not found") {
       res.status(404).send("User not found D:");
-      return;
+      return false;
     }
     res.status(500).send("500 Internal Server Error D:");
-    return;
+    return false;
   }
 
   const currentRank = user.pp.rank ? user.pp.rank : undefined;
-  const prevDetails = await db.getGameDetails(user.id, getMode());
+  const prevDetails = await db.getGameDetails(user.id, mode);
 
   const formattedAccuracy =
     user.accuracy === null ? undefined : user.accuracyFormatted;
 
   if (!prevDetails) {
-    const mode = getMode();
-
     const osuTrack = new OsuTrack();
 
     const peak = {
@@ -157,19 +144,39 @@ export const getById = async (req: any, res: any): Promise<void> => {
       }
     }
 
-    const mode = getMode();
     await db.setPeaks(user.id, mode, finalChanges);
   }
 
-  const profileImage = await loadProfileImageBuffer(user.id).catch(
-    () => undefined
-  );
+  const profileImage = await loadProfileImageBuffer(user.id);
 
   await db.setUserDetails(user.id, user.name, profileImage);
+  return true;
+};
+
+export const getById = async (req: any, res: any): Promise<void> => {
+  const userId: number = parseInt(req.params.userId, 10);
+
+  if (isNaN(userId)) {
+    res.status(400).send("Invalid user id");
+    return;
+  }
+
+  const theme = req.query.theme === "light" ? Theme.light : Theme.dark;
+  const mode = getMode(req.query.mode);
+
+  // if the user quickly refreshes, just send it data using the database rather than constantly pinging the api
+  if (await checkRecentlyUpdated(userId)) {
+    if (await db.getGameDetails(userId, mode)) {
+      sendImage(await generateImageFromDB(userId, mode, theme), res);
+      return;
+    }
+  }
+
+  if (!(await updateUserDetails(userId, mode, res))) return;
 
   await db.setLastUpdatedNow(userId);
 
-  sendImage(await generateImageFromDB(userId, getMode(), theme), res);
+  sendImage(await generateImageFromDB(userId, mode, theme), res);
   return;
 };
 
