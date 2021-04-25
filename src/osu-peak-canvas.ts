@@ -116,24 +116,8 @@ export default class OsuPeakCanvas {
       const icon = await loadImage(getPath());
       this.ctx.drawImage(icon, 300, 12, 75, 75);
     };
-
-    switch (this.mode) {
-      case 0:
-        await drawGameModeIcon("./images/std");
-        break;
-      case 1:
-        await drawGameModeIcon("./images/taiko");
-        break;
-      case 2:
-        await drawGameModeIcon("./images/ctb");
-        break;
-      case 3:
-        await drawGameModeIcon("./images/mania");
-        break;
-      default:
-        await drawGameModeIcon("./images/std");
-        break;
-    }
+    const modes = ["std", "taiko", "ctb", "mania"];
+    await drawGameModeIcon(`./images/${modes[this.mode]}`);
   }
 
   public get backgroundColor(): string {

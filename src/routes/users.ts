@@ -131,25 +131,24 @@ const updateUserDetails = async (
   mode: Mode,
   res: any
 ): Promise<Boolean> => {
-  const user = await getUserInfo(userId, mode).catch((err) => err);
+  const user: osu.User | Error = await getUserInfo(userId, mode).catch(
+    (err) => err
+  );
 
   if (user instanceof Error) {
-    if (user.message === "Not found") {
-      res.status(404).send("User not found D:");
-      return false;
-    }
-    res.status(500).send("500 Internal Server Error D:");
+    res.status(404).send("User not found");
     return false;
   }
 
   const currentRank = user.pp.rank ? user.pp.rank : undefined;
-  const prevDetails = await db.getGameDetails(user.id, mode);
+  let prevDetails = await db.getGameDetails(user.id, mode);
 
   const formattedAccuracy =
     user.accuracy === null ? undefined : user.accuracyFormatted;
 
   if (!prevDetails) {
     await setPeaksFromOsuTrack(currentRank, formattedAccuracy, user, mode);
+    prevDetails = await db.getGameDetails(user.id, mode);
   }
 
   if (prevDetails) {
