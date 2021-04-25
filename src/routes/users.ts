@@ -78,6 +78,37 @@ const checkRecentlyUpdated = async (userId: number): Promise<Boolean> => {
   return false;
 };
 
+const setPeaksFromOsuTrack = async (
+  currentRank: any,
+  formattedAccuracy: any,
+  user: any,
+  mode: Mode
+) => {
+  const osuTrack = new OsuTrack();
+
+  const peak = {
+    rank: currentRank,
+    acc: formattedAccuracy,
+  };
+
+  const osutrackRankAcc = await osuTrack.getPeakRankAcc(user.id, mode);
+
+  if (osutrackRankAcc) {
+    if (osutrackRankAcc.peakRank) {
+      if (osutrackRankAcc.peakRank < currentRank) {
+        peak.rank = osutrackRankAcc.peakRank;
+      }
+    }
+
+    if (osutrackRankAcc.peakAcc) {
+      if (osutrackRankAcc.peakAccValue > user.accuracy) {
+        peak.acc = osutrackRankAcc.peakAcc;
+      }
+    }
+  }
+  await db.setPeaks(user.id, mode, peak);
+};
+
 const updateUserDetails = async (
   userId: number,
   mode: Mode,
@@ -101,30 +132,7 @@ const updateUserDetails = async (
     user.accuracy === null ? undefined : user.accuracyFormatted;
 
   if (!prevDetails) {
-    const osuTrack = new OsuTrack();
-
-    const peak = {
-      rank: currentRank,
-      acc: formattedAccuracy,
-    };
-
-    const osutrackRankAcc = await osuTrack.getPeakRankAcc(user.id, mode);
-
-    if (osutrackRankAcc) {
-      if (osutrackRankAcc.peakRank) {
-        if (osutrackRankAcc.peakRank < currentRank) {
-          peak.rank = osutrackRankAcc.peakRank;
-        }
-      }
-
-      if (osutrackRankAcc.peakAcc) {
-        if (osutrackRankAcc.peakAccValue > user.accuracy) {
-          peak.acc = osutrackRankAcc.peakAcc;
-        }
-      }
-    }
-
-    await db.setPeaks(user.id, mode, peak);
+    await setPeaksFromOsuTrack(currentRank, formattedAccuracy, user, mode);
   }
 
   if (prevDetails) {
@@ -139,7 +147,6 @@ const updateUserDetails = async (
         finalChanges.acc = formattedAccuracy;
       }
     }
-
     await db.setPeaks(user.id, mode, finalChanges);
   }
 

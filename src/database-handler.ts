@@ -3,6 +3,7 @@ import { promisify } from "util";
 import { Mode, UserDetails, GameDetails } from "./osu.types";
 
 const dbPath = process.env["DB_PATH"];
+const modes = ["std", "taiko", "ctb", "mania"];
 
 if (!dbPath) throw new Error("DB not given through path");
 
@@ -29,45 +30,28 @@ export const getGameDetails = async (
   id: number,
   mode: Mode
 ): Promise<GameDetails> => {
-  if (mode === 1)
-    return dbGet("SELECT peakRank, peakAcc FROM taiko WHERE id = ?", [id]);
+  if (!mode) {
+    return dbGet("SELECT peakRank, peakAcc FROM std WHERE id = ?", [id]);
+  }
 
-  if (mode === 2)
-    return dbGet("SELECT peakRank, peakAcc FROM ctb WHERE id = ?", [id]);
-
-  if (mode === 3)
-    return dbGet("SELECT peakRank, peakAcc FROM mania WHERE id = ?", [id]);
-
-  return dbGet("SELECT peakRank, peakAcc FROM std WHERE id = ?", [id]);
+  return dbGet(`SELECT peakRank, peakAcc FROM ${modes[mode]} WHERE id = ?`, [
+    id,
+  ]);
 };
 
 export const getUserDetails = async (id: number): Promise<UserDetails> =>
   dbGet("SELECT * FROM users WHERE id = ?", [id]);
 
 const getUserExists = (id: number, mode?: Mode): Promise<boolean> => {
-  if (mode === 0)
-    return dbGet("SELECT id FROM std WHERE id = ?", [id]).then((user: any) =>
+  if (mode === undefined) {
+    return dbGet("SELECT id FROM users WHERE id = ?", [id]).then((user: any) =>
       user ? true : false
     );
+  }
 
-  if (mode === 1)
-    return dbGet("SELECT id FROM taiko WHERE id = ?", [id]).then((user: any) =>
-      user ? true : false
-    );
-
-  if (mode === 2)
-    return dbGet("SELECT id FROM ctb WHERE id = ?", [id]).then((user: any) =>
-      user ? true : false
-    );
-
-  if (mode === 3)
-    return dbGet("SELECT id FROM mania WHERE id = ?", [id]).then((user: any) =>
-      user ? true : false
-    );
-
-  return dbGet("SELECT id FROM users WHERE id = ?", [id]).then((user: any) =>
-    user ? true : false
-  );
+  return dbGet(`SELECT id FROM ${modes[mode]} WHERE id = ?`, [
+    id,
+  ]).then((user: any) => (user ? true : false));
 };
 
 export const setLastUpdatedNow = async (id: number): Promise<void> => {
@@ -84,29 +68,18 @@ const setPeakAcc = async (
   peak: string
 ): Promise<void> => {
   const userExists = await getUserExists(id, mode);
-  if (mode === 0) {
-    return userExists
-      ? dbRun("UPDATE std SET peakAcc = ? WHERE id = ?", [peak, id])
-      : dbRun("INSERT INTO std (id, peakAcc) VALUES (?, ?)", [id, peak]);
-  }
 
-  if (mode === 1) {
-    return userExists
-      ? dbRun("UPDATE taiko SET peakAcc = ? WHERE id = ?", [peak, id])
-      : dbRun("INSERT INTO taiko (id, peakAcc) VALUES (?, ?)", [id, peak]);
+  if (userExists) {
+    await dbRun(`UPDATE ${modes[mode]} SET peakAcc = ? WHERE id = ?`, [
+      peak,
+      id,
+    ]);
+    return;
   }
-
-  if (mode === 2) {
-    return userExists
-      ? dbRun("UPDATE ctb SET peakAcc = ? WHERE id = ?", [peak, id])
-      : dbRun("INSERT INTO ctb (id, peakAcc) VALUES (?, ?)", [id, peak]);
-  }
-
-  if (mode === 3) {
-    return userExists
-      ? dbRun("UPDATE mania SET peakAcc = ? WHERE id = ?", [peak, id])
-      : dbRun("INSERT INTO mania (id, peakAcc) VALUES (?, ?)", [id, peak]);
-  }
+  await dbRun(`INSERT INTO ${modes[mode]} (id, peakAcc) VALUES (?, ?)`, [
+    id,
+    peak,
+  ]);
 };
 
 const setPeakRank = async (

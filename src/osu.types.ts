@@ -1,4 +1,4 @@
-export type Mode = 0 | 1 | 2 | 3 | undefined;
+export type Mode = 0 | 1 | 2 | 3;
 
 export enum Theme {
   dark,
