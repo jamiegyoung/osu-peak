@@ -57,7 +57,7 @@ const getMode = (mode: String): Mode => {
     return 1;
   }
 
-  if (mode === "2" || mode === "ctb" || mode === "catch") {
+  if (mode === "2" || mode === "ctb" || mode === "catch" || mode === "fruits") {
     return 2;
   }
 

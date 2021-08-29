@@ -12,19 +12,19 @@ _NOTE: This will check [osu!track](https://www.ameobea.me/osutrack/) for your pr
 Insert your osu user id into this link <https://osu.jamieyoung.tech/u/[userid]> and add it to your user page.
 
 Optional parameters are
-|Param|Description      |Options           |
-|-----|-----------------|------------------|
-|theme|changes the theme|light / other|
-|mode |changes the mode |refer to the mode chart below|
+| Param | Description       | Options                       |
+| ----- | ----------------- | ----------------------------- |
+| theme | changes the theme | light / other                 |
+| mode  | changes the mode  | refer to the mode chart below |
 
 
 ###  Mode chart
-|Mode|Options|
-|---|---|
-|standard|0, standard, std, osu|
-|taiko|1, taiko|
-|ctb|2, ctb, catch|
-|mania|3, mania|
+| Mode     | Options               |
+| -------- | --------------------- |
+| standard | 0, standard, std, osu |
+| taiko    | 1, taiko              |
+| ctb      | 2, ctb, catch         |
+| mania    | 3, mania              |
 
 ## Example Osu Userpage
 Dark theme standard:
@@ -46,7 +46,7 @@ docker build -t osu-peak .
 ```
 and then
 ```sh
-docker run -p 7527:7527 -v /path/to/local/db:/database -e DB_PATH=/database/database.db osu-peak 
+docker run -it --name osu-peak -p 7527:7527 -v /path/to/local/database.db:/database.db -e DB_PATH=/database.db osu-peak
 ```
 
 ## Dev setup
