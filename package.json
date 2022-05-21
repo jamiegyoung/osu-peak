@@ -2,7 +2,9 @@
   "name": "osu-peak",
   "version": "1.1.0",
   "description": "Generates an image of your osu peak rank and accuracy",
-  "main": "dist/app.js",
+  "exports": "./dist/app.js",
+  "main": "./dist/app.js",
+  "type": "module",
   "scripts": {
     "make-db": "node bin/database.js",
     "make-config": "node bin/config.js",
@@ -28,7 +30,7 @@
     "knex": "^2.0.0",
     "node-fetch": "^2.6.1",
     "node-osu": "^2.2.1",
-    "ora": "^5.4.0",
+    "ora": "^6.1.0",
     "sqlite3": "^5.0.8",
     "typescript": "^4.6.4"
   },

@@ -1,6 +1,6 @@
 // import sqlite3 from "sqlite3";
 import Knex from "knex";
-import { ModeNumber, User, Mode } from "./types";
+import { ModeNumber, User, Mode } from "./types.js";
 
 const dbPath = process.env["DB_PATH"];
 const modes = ["std", "taiko", "ctb", "mania"];

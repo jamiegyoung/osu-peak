@@ -1,6 +1,7 @@
-const fs = require("fs");
-const path = require("path");
-const ora = require("ora");
+import fs from 'fs';
+import path from 'path';
+import ora from 'ora';
+
 const spinner = ora("").start();
 
 const checkConfig = () => {

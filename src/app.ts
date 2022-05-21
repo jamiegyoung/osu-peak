@@ -1,8 +1,9 @@
-require('dotenv').config()
+import dotenv from 'dotenv'
+dotenv.config()
 import express from "express";
 const app = express();
 
-import * as users from "./routes/users";
+import * as users from "./routes/users.js";
 
 app.get("/u/:userId", users.getById);
 

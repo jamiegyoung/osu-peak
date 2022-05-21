@@ -1,6 +1,9 @@
-import { ModeNumber } from "../types";
-import { link } from "../configs/osutrack.json";
+import { ModeNumber } from "../types.js";
 import fetch from "node-fetch";
+import { readFile } from 'node:fs/promises';
+
+const { link } = JSON.parse(await readFile("./src/configs/osutrack.json", "utf-8"));
+
 
 export default class OsuTrack {
   /**

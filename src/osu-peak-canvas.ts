@@ -1,5 +1,6 @@
-import { createCanvas, loadImage, registerFont, Image } from "canvas";
-import { ModeNumber, Theme } from "./types";
+import canvaspkg from "canvas";
+const { createCanvas, loadImage, registerFont, Image } = canvaspkg;
+import { ModeNumber, Theme } from "./types.js";
 
 interface Options {
   [key: string]: any;
@@ -91,7 +92,7 @@ export default class OsuPeakCanvas {
     // Draw border
     this.ctx.strokeStyle = "#424242";
     this.drawRoundRect(5, 5, 90, 90, 5, true, true);
-    const profileImage: Image = new Image();
+    const profileImage = new Image();
     profileImage.onload = () => {
       this.ctx.drawImage(profileImage, 10, 10, 80, 80);
     };

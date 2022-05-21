@@ -1,11 +1,12 @@
-import * as db from "../database";
+import * as db from "../database.js";
 import osu from "node-osu";
 import https from "https";
-import OsuPeakCanvas from "../osu-peak-canvas";
-import { apiKey } from "../configs/osu.json";
-import { ModeNumber, Theme } from "../types";
-import OsuTrack from "../interfaces/OsuTrack";
-import { Mode, User } from "../types";
+import OsuPeakCanvas from "../osu-peak-canvas.js";
+import OsuTrack from "../interfaces/OsuTrack.js";
+import { Mode, User, ModeNumber, Theme } from "../types.js";
+import { readFile } from "node:fs/promises";
+
+const { apiKey } = JSON.parse(await readFile("./src/configs/osu.json", "utf-8"));
 
 const osuApi = new osu.Api(apiKey);
 

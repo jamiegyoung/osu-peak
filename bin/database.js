@@ -1,7 +1,7 @@
-const sqlite3 = require("sqlite3");
-const path = require("path");
-const fs = require("fs");
-const ora = require("ora");
+import sqlite3 from 'sqlite3';
+import path from 'path'
+import fs from 'fs'
+import ora from 'ora'
 const spinner = ora("").start();
 
 const createTables = async (db) => {
