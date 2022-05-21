@@ -1,9 +1,9 @@
 import { createCanvas, loadImage, registerFont, Image } from "canvas";
-import { Mode, Theme } from "./osu.types";
+import { ModeNumber, Theme } from "./types";
 
 interface Options {
   [key: string]: any;
-  mode: Mode;
+  mode: ModeNumber;
   theme: Theme;
   peakRank?: string | number;
   peakAcc?: string;
@@ -16,11 +16,11 @@ export default class OsuPeakCanvas {
   private canvas: any;
   private ctx: any;
   public theme: Theme;
-  public mode: Mode;
+  public mode: ModeNumber;
   public peakRank?: string | number;
   public peakAcc?: string;
   public username?: string;
-  public profilePicture?: Buffer;
+  public profilePicture?: string;
 
   constructor(
     width: number,

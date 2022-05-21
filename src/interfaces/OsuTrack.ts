@@ -1,4 +1,4 @@
-import { Mode } from "../osu.types";
+import { ModeNumber } from "../types";
 import { link } from "../configs/osutrack.json";
 import fetch from "node-fetch";
 
@@ -9,8 +9,8 @@ export default class OsuTrack {
    * @param mode the mode to get the details for
    */
   public async getPeakRankAcc(
-    id: number,
-    mode: Mode
+    id: string,
+    mode: ModeNumber
   ): Promise<
     { peakRank: number; peakAcc: string; peakAccValue: number } | undefined
   > {

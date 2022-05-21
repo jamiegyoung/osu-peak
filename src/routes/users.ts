@@ -1,17 +1,18 @@
-import * as db from "../database-handler";
+import * as db from "../database";
 import osu from "node-osu";
 import https from "https";
 import OsuPeakCanvas from "../osu-peak-canvas";
 import { apiKey } from "../configs/osu.json";
-import { Mode, Theme, UserDetails, GameDetails } from "../osu.types";
+import { ModeNumber, Theme } from "../types";
 import OsuTrack from "../interfaces/OsuTrack";
+import { Mode, User } from "../types";
 
 const osuApi = new osu.Api(apiKey);
 
-const getUserInfo = (id: number, mode: Mode): Promise<osu.User> =>
-  osuApi.getUser({ u: id.toString(), m: mode });
+const getUserInfo = (id: string, mode: ModeNumber): Promise<osu.User> =>
+  osuApi.getUser({ u: id, m: mode });
 
-const loadProfileImageBuffer = (id: number): Promise<string> =>
+const loadProfileImageBuffer = (id: string): Promise<string> =>
   new Promise((resolve, reject) => {
     https
       .get(`https://a.ppy.sh/${id}`, (imgRes) => {
@@ -30,12 +31,12 @@ const loadProfileImageBuffer = (id: number): Promise<string> =>
   });
 
 const generateImageFromDB = async (
-  id: number,
-  mode: Mode,
+  id: string,
+  mode: ModeNumber,
   imageTheme: Theme
 ): Promise<Buffer> => {
-  const gameDetails: GameDetails = await db.getGameDetails(id, mode);
-  const userDetails: UserDetails = await db.getUserDetails(id);
+  const gameDetails: Mode = await db.getGameDetails(id, mode);
+  const userDetails: User = await db.getUserDetails(id);
 
   const osuPeakCanvas = new OsuPeakCanvas(400, 100, {
     theme: imageTheme,
@@ -45,14 +46,15 @@ const generateImageFromDB = async (
 
   if (gameDetails) {
     osuPeakCanvas.peakRank = gameDetails.peakRank;
-    osuPeakCanvas.peakAcc = gameDetails.peakAcc;
+    osuPeakCanvas.peakAcc = gameDetails.peakAcc.toString();
   }
-
-  osuPeakCanvas.profilePicture = userDetails.profileImage;
+  if (userDetails.profileImage) {
+    osuPeakCanvas.profilePicture = userDetails.profileImage;
+  }
   return osuPeakCanvas.generateImage();
 };
 
-const getMode = (mode: String): Mode => {
+const getMode = (mode: String): ModeNumber => {
   if (mode === "1" || mode === "taiko") {
     return 1;
   }
@@ -68,7 +70,7 @@ const getMode = (mode: String): Mode => {
   return 0;
 };
 
-const checkRecentlyUpdated = async (userId: number): Promise<Boolean> => {
+const checkRecentlyUpdated = async (userId: string): Promise<Boolean> => {
   const dateNow: Date = new Date();
   const lastUpdated: Date = await db.getLastUpdatedDate(userId);
   const fiveMin = 5 * 1000;
@@ -82,7 +84,7 @@ const setPeaksFromOsuTrack = async (
   currentRank: any,
   formattedAccuracy: any,
   user: any,
-  mode: Mode
+  mode: ModeNumber
 ) => {
   const osuTrack = new OsuTrack();
 
@@ -107,10 +109,10 @@ const setPeaksFromOsuTrack = async (
 
 const setPeaksFromPreviousDetails = async (
   currentRank: any,
-  prevDetails: GameDetails,
+  prevDetails: Mode,
   user: any,
   formattedAccuracy: any,
-  mode: Mode
+  mode: ModeNumber
 ) => {
   const finalChanges: { rank?: number; acc?: string } = {};
 
@@ -119,7 +121,9 @@ const setPeaksFromPreviousDetails = async (
   }
 
   if (prevDetails.peakAcc) {
-    if (user.accuracy > parseFloat(prevDetails.peakAcc.slice(0, -1))) {
+    if (
+      user.accuracy > parseFloat(prevDetails.peakAcc.toString().slice(0, -1))
+    ) {
       finalChanges.acc = formattedAccuracy;
     }
   }
@@ -127,8 +131,8 @@ const setPeaksFromPreviousDetails = async (
 };
 
 const updateUserDetails = async (
-  userId: number,
-  mode: Mode,
+  userId: string,
+  mode: ModeNumber,
   res: any
 ): Promise<Boolean> => {
   const user: osu.User | Error = await getUserInfo(userId, mode).catch(
@@ -141,14 +145,14 @@ const updateUserDetails = async (
   }
 
   const currentRank = user.pp.rank ? user.pp.rank : undefined;
-  let prevDetails = await db.getGameDetails(user.id, mode);
+  let prevDetails = await db.getGameDetails(user.id.toString(), mode);
 
   const formattedAccuracy =
     user.accuracy === null ? undefined : user.accuracyFormatted;
 
   if (!prevDetails) {
     await setPeaksFromOsuTrack(currentRank, formattedAccuracy, user, mode);
-    prevDetails = await db.getGameDetails(user.id, mode);
+    prevDetails = await db.getGameDetails(user.id.toString(), mode);
   }
 
   if (prevDetails) {
@@ -162,18 +166,18 @@ const updateUserDetails = async (
   }
 
   // If no profile image is found, just set it as undefined so it defaults to the guest image
-  const profileImage = await loadProfileImageBuffer(user.id).catch(
+  const profileImage = await loadProfileImageBuffer(user.id.toString()).catch(
     () => undefined
   );
 
-  await db.setUserDetails(user.id, user.name, profileImage);
+  await db.setUserDetails(user.id.toString(), user.name, profileImage);
   return true;
 };
 
 export const getById = async (req: any, res: any): Promise<void> => {
-  const userId: number = parseInt(req.params.userId, 10);
+  const userId: string = req.params.userId;
 
-  if (isNaN(userId)) {
+  if (userId.match(/^\d+$/) === null) {
     res.status(400).send("Invalid user id");
     return;
   }
