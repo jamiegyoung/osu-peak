@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/jamiegyoung/osu-peak#readme",
   "dependencies": {
-    "canvas": "^2.7.0",
+    "canvas": "^2.9.2",
     "dotenv": "^16.0.1",
     "express": "^4.17.1",
     "knex": "^2.0.0",
