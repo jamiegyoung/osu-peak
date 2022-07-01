@@ -6,7 +6,9 @@ import OsuTrack from "../interfaces/OsuTrack.js";
 import { Mode, User, ModeNumber, Theme } from "../types.js";
 import { readFile } from "node:fs/promises";
 
-const { apiKey } = JSON.parse(await readFile("./src/configs/osu.json", "utf-8"));
+const { apiKey } = JSON.parse(
+  await readFile("./src/configs/osu.json", "utf-8")
+);
 
 const osuApi = new osu.Api(apiKey);
 
@@ -72,8 +74,9 @@ const getMode = (mode: String): ModeNumber => {
 };
 
 const checkRecentlyUpdated = async (userId: string): Promise<Boolean> => {
-  const dateNow: Date = new Date();
   const lastUpdated: Date = await db.getLastUpdatedDate(userId);
+  if (!lastUpdated) return false;
+  const dateNow: Date = new Date();
   const fiveMin = 5 * 1000;
   if (dateNow.valueOf() - lastUpdated.valueOf() < fiveMin) {
     return true;
@@ -147,7 +150,6 @@ const updateUserDetails = async (
 
   const currentRank = user.pp.rank ? user.pp.rank : undefined;
   let prevDetails = await db.getGameDetails(user.id.toString(), mode);
-
   const formattedAccuracy =
     user.accuracy === null ? undefined : user.accuracyFormatted;
 
@@ -193,7 +195,7 @@ export const getById = async (req: any, res: any): Promise<void> => {
       return;
     }
   }
-
+  
   if (!(await updateUserDetails(userId, mode, res))) return;
 
   await db.setLastUpdatedNow(userId);

@@ -18,17 +18,14 @@ const knex = Knex({
 export const getLastUpdatedDate = (id: string): Promise<Date> =>
   knex<User>("users").where({ id }).first("lastUpdated");
 
-export const getGameDetails = async (
-  id: string,
-  mode: ModeNumber
-): Promise<Mode> => {
+export const getGameDetails = (id: string, mode: ModeNumber): Promise<Mode> => {
   if (!mode) {
     return knex<Mode>("std").where({ id }).first("peakRank", "peakAcc");
   }
   return knex<Mode>(modes[mode]).where({ id }).first("peakRank", "peakAcc");
 };
 
-export const getUserDetails = async (id: string): Promise<User> =>
+export const getUserDetails = (id: string): Promise<User> =>
   knex<User>("users").where({ id }).first("*");
 
 const getUserExists = (id: string, mode?: ModeNumber): Promise<boolean> => {
@@ -39,11 +36,6 @@ const getUserExists = (id: string, mode?: ModeNumber): Promise<boolean> => {
       .then((user: User) => (user ? true : false));
   }
 
-  // return dbGet(`SELECT id FROM ${modes[mode]} WHERE id = ?`, [id]).then(
-  //   (user: any) => (user ? true : false)
-  // );
-  console.log(dbPath)
-
   return knex<Mode>(modes[mode])
     .where({ id })
     .first("*")
@@ -52,12 +44,12 @@ const getUserExists = (id: string, mode?: ModeNumber): Promise<boolean> => {
 
 export const setLastUpdatedNow = async (id: string): Promise<void> => {
   if (await getUserExists(id)) {
-    knex<User>("users")
+    await knex<User>("users")
       .where({ id })
       .update({ lastUpdated: Number(new Date()) });
     return;
   }
-  knex<User>("users").insert({ id, lastUpdated: Number(new Date()) })
+  await knex<User>("users").insert({ id, lastUpdated: Number(new Date()) });
 };
 
 const setPeak = async (
@@ -67,23 +59,22 @@ const setPeak = async (
   peakType: String
 ) => {
   const userExists = await getUserExists(id, mode);
-
   if (userExists) {
-    knex<Mode>(modes[mode])
+    await knex<Mode>(modes[mode])
       .where({ id })
       .update({ [`${peakType}`]: peak });
     return;
   }
-  knex<Mode>(modes[mode]).insert({ id, [`${peakType}`]: peak });
+  await knex<Mode>(modes[mode]).insert({ id, [`${peakType}`]: peak });
 };
 
-const setPeakAcc = async (
+const setPeakAcc = (
   id: string,
   mode: ModeNumber,
   peak: string
 ): Promise<void> => setPeak(id, mode, peak, "peakAcc");
 
-const setPeakRank = async (
+const setPeakRank = (
   id: string,
   mode: ModeNumber,
   peak: number
@@ -109,8 +100,8 @@ export const setUserDetails = async (
   profileImage: string | undefined
 ): Promise<void> => {
   if (await getUserExists(id)) {
-    knex<User>("users").where({ id }).update({ username, profileImage });
+    await knex<User>("users").where({ id }).update({ username, profileImage });
     return;
   }
-  knex<User>("users").insert({ id, username, profileImage });
+  await knex<User>("users").insert({ id, username, profileImage });
 };
