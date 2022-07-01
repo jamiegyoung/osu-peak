@@ -40,14 +40,6 @@ Light theme taiko:
 ## Setup
 If you need a database/config refer to the [database / config setup](#database-and-config-setup)
 
-A Dockerfile is present and can be used by running
-```sh
-docker build -t osu-peak .
-```
-and then
-```sh
-docker run -it --name osu-peak -p 7527:7527 -v /path/to/local/database.db:/database.db -e DB_PATH=/database.db osu-peak
-```
 
 ## Dev setup
 Run the following commands to setup the repo for development
