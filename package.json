@@ -29,7 +29,7 @@
     "express": "^4.17.1",
     "express-rate-limit": "^6.4.0",
     "knex": "^2.1.0",
-    "node-fetch": "^3.2.4",
+    "node-fetch": "^3.2.7",
     "node-osu": "^2.2.1",
     "ora": "^6.1.2",
     "sqlite3": "^5.0.8",
