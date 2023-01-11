@@ -10,7 +10,7 @@
     "make-config": "node bin/config.js",
     "build": "tsc",
     "start": "tsc && node ./dist/app.js",
-    "start-dev": "set DB_PATH=./database/database.db&& tsc && node .",
+    "start-dev": "tsc && DB_PATH=./database/database.db node .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
